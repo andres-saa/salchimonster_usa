@@ -1,0 +1,107 @@
+
+    "listaCategorias": [
+        {
+            "categoria_id": "115",
+            "local_id": "1",
+            "categoria_descripcion": "ADICIONES NJ",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "109",
+            "local_id": "12",
+            "categoria_descripcion": "BEBIDAS",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#efbaba",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "118",
+            "local_id": "16",
+            "categoria_descripcion": "COMBO SALCHIPAPAS 2 PERSONAS NJ",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "119",
+            "local_id": "16",
+            "categoria_descripcion": "COMBOS FAMILIARES",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "116",
+            "local_id": "16",
+            "categoria_descripcion": "COMBOS HAMBURGUESAS NJ",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "117",
+            "local_id": "16",
+            "categoria_descripcion": "COMBOS SALCHIPAPAS PERSONALES",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "111",
+            "local_id": "16",
+            "categoria_descripcion": "HAMBURGUESAS NJ",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "113",
+            "local_id": "16",
+            "categoria_descripcion": "PARA COMPARTIR NJ",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "110",
+            "local_id": "16",
+            "categoria_descripcion": "SALCHIPAPA PARA 2 PERSONAS NJ",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "112",
+            "local_id": "16",
+            "categoria_descripcion": "SALCHIPAPAS PERSONALES NJ",
+            "categoria_estado": "1",
+            "categoria_padreid": "108",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        },
+        {
+            "categoria_id": "108",
+            "local_id": "12",
+            "categoria_descripcion": "SM NEW JERSEY",
+            "categoria_estado": "1",
+            "categoria_padreid": "0",
+            "categoria_color": "#e74c3c",
+            "categoria_delivery": "0"
+        }
+    ],
+    "totalregistros": 126,
+    "mensajes": [
+        "Carta obtenida..."
+    ]
+}

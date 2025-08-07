@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+  front_salchimonster_usa:
+    build: { context: ./frontend/salchimonster_usa, target: prod }
+    container_name: front_salchimonster_usa
+    env_file: ./frontend/salchimonster_usa/.env_prod
+    restart: unless-stopped
+
+  proxy_salchimonster_usa:
+    image: nginx:1.27-alpine
+    container_name: proxy
+    ports: [ '80:80' ]
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/proxy_params:/etc/nginx/proxy_params:ro
+    depends_on: [front_salchimonster_usa]
+    restart: unless-stopped
+
