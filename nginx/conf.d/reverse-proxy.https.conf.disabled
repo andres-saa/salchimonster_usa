@@ -1,0 +1,14 @@
+
+server {
+    listen 443 ssl http2;
+    server_name usa.salchimonster;
+
+    ssl_certificate /etc/letsencrypt/live/usa.salchimonster/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/usa.salchimonster/privkey.pem;
+    include /etc/nginx/conf.d/ssl_params.conf;
+
+    location / {
+        proxy_pass http://front_usa:80;
+        include /etc/nginx/proxy_params;
+    }
+}
