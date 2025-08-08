@@ -6,8 +6,8 @@ services:
     env_file: ./frontend/usa/.env_prod
     restart: unless-stopped
 
-  proxy_final:
-    build: { context: ./nginx }            # debe existir ./nginx/Dockerfile
+  proxy:
+    build: { context: ./nginx }
     container_name: proxy
     ports: [ '80:80', '443:443' ]
     volumes:
@@ -24,19 +24,8 @@ services:
     volumes:
       - ./nginx/certbot/www:/var/www/certbot
       - ./nginx/letsencrypt:/etc/letsencrypt
-    depends_on: [proxy_final]
+    depends_on: [proxy]
     entrypoint: sh
-    command: -c "
-      until certbot certonly -n --keep-until-expiring \
-        --webroot -w /var/www/certbot \
-        -d usa.salchimonster.com \
-        --email 'andrew19f@gmail.com' --agree-tos --no-eff-email; do
-          echo 'Retrying in 30s...'; sleep 30;
-      done;
-      echo 'Certs ready.';
-      trap exit TERM;
-      while :; do
-        certbot renew -n --webroot -w /var/www/certbot --quiet || true;
-        sleep 12h;
-      done"
+    command: -c "if [ -n '-d usa.salchimonster.com' ]; then certbot certonly -n --keep-until-expiring --webroot -w /var/www/certbot -d usa.salchimonster.com --email \"andrew19f@gmail.com\" --agree-tos --no-eff-email ; fi; trap exit TERM; while :; do certbot renew -n --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
     restart: unless-stopped
+

@@ -1,3 +1,3 @@
 FROM nginx:1.27-alpine
-# Ejecuta scripts en /docker-entrypoint.d/* antes de arrancar nginx
 COPY docker-entrypoint.d/ /docker-entrypoint.d/
+RUN chmod +x /docker-entrypoint.d/*.sh || true      && sed -i 's/\r$//' /docker-entrypoint.d/*.sh || true
