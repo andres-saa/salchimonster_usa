@@ -3,7 +3,7 @@ set -eu
 (
   TARGET="/etc/nginx/conf.d/reverse-proxy.https.conf"
   DISABLED="/etc/nginx/conf.d/reverse-proxy.https.conf.disabled"
-  FIRST_DOMAIN="usa.salchimonster"
+  FIRST_DOMAIN="usa.salchimonster.com"
   # Espera a que exista el primer cert (emisión inicial)
   while [ ! -f "/etc/letsencrypt/live/$FIRST_DOMAIN/fullchain.pem" ]; do
     sleep 5
