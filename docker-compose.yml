@@ -16,7 +16,7 @@ services:
 
   proxy:
     image: nginx:1.27-alpine
-    container_name: tienda_salchimonster_usa_proxy_dev
+    container_name: t_salchi_usa_proxy_dev
     ports: [ '80:80' ]
     volumes:
       - ./nginx_dev/conf.d:/etc/nginx/conf.d:ro

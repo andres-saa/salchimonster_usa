@@ -6,12 +6,12 @@ services:
     env_file: ./frontend/usa/.env_prod
     restart: unless-stopped
 
-  proxy_tienda_salchimonster_usa:
-    image: nginx:1.27-alpine
+  proxy_t_salchi_usa:
+    build: { context: ./nginx }
     container_name: proxy
     ports: [ '80:80', '443:443' ]
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:rw
       - ./nginx/proxy_params:/etc/nginx/proxy_params:ro
       - ./nginx/certbot/www:/var/www/certbot:ro
       - ./nginx/letsencrypt:/etc/letsencrypt:ro
@@ -24,7 +24,8 @@ services:
     volumes:
       - ./nginx/certbot/www:/var/www/certbot
       - ./nginx/letsencrypt:/etc/letsencrypt
+    depends_on: [proxy_t_salchi_usa]
     entrypoint: sh
-    command: -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $!; done"
+    command: -c "until certbot certonly --webroot -w /var/www/certbot -d usa.salchimonster --email \"andrew19f@gmail.com\" --agree-tos --no-eff-email ; do echo 'Retrying in 30s...'; sleep 30; done; echo 'Certs ready.'; trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
     restart: unless-stopped
 
