@@ -26,6 +26,6 @@ services:
       - ./nginx/letsencrypt:/etc/letsencrypt
     depends_on: [proxy_t_salchi_usa]
     entrypoint: sh
-    command: -c "until certbot certonly --webroot -w /var/www/certbot -d usa.salchimonster --email \"andrew19f@gmail.com\" --agree-tos --no-eff-email ; do echo 'Retrying in 30s...'; sleep 30; done; echo 'Certs ready.'; trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
+    command: -c "until certbot certonly --webroot -w /var/www/certbot -d usa.salchimonster.com --email \"andrew19f@gmail.com\" --agree-tos --no-eff-email ; do echo 'Retrying in 30s...'; sleep 30; done; echo 'Certs ready.'; trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
     restart: unless-stopped
 

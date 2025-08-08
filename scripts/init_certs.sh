@@ -7,9 +7,9 @@ echo "Arrancando proxy (HTTP 80) para validación ACME..."
 $COMPOSE up -d proxy_tienda_salchimonster_usa
 
 echo "Solicitando certificados para:
-usa.salchimonster"
+usa.salchimonster.com"
 
-$COMPOSE run --rm certbot certonly --webroot -w /var/www/certbot -d usa.salchimonster \
+$COMPOSE run --rm certbot certonly --webroot -w /var/www/certbot -d usa.salchimonster.com \
     --email "andrew19f@gmail.com" --agree-tos --no-eff-email 
 
 echo "Certificados emitidos. Reiniciando proxy..."
