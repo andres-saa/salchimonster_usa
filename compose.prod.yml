@@ -6,7 +6,7 @@ services:
     env_file: ./frontend/usa/.env_prod
     restart: unless-stopped
 
-  proxy_t_salchi_usa:
+  proxy_final:
     build: { context: ./nginx }
     container_name: proxy
     ports: [ '80:80', '443:443' ]
@@ -24,7 +24,7 @@ services:
     volumes:
       - ./nginx/certbot/www:/var/www/certbot
       - ./nginx/letsencrypt:/etc/letsencrypt
-    depends_on: [proxy_t_salchi_usa]
+    depends_on: [proxy_final]
     entrypoint: sh
     command: -c "until certbot certonly --webroot -w /var/www/certbot -d usa.salchimonster.com --email \"andrew19f@gmail.com\" --agree-tos --no-eff-email ; do echo 'Retrying in 30s...'; sleep 30; done; echo 'Certs ready.'; trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
     restart: unless-stopped
