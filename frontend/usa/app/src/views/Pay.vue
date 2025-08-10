@@ -72,7 +72,7 @@
 
 
           <!-- Mostrar campo de placa solo si el método es "Pasar a recoger" (id 2) y la sede es 33 -->
-          <template v-if="user.user.order_type && user.user.order_type.id === 2 && siteStore.location?.site?.site_id === 33">
+          <template v-if="user.user.order_type && user.user.order_type.id === 2 && [33,35,36].includes(siteStore.location?.site?.site_id)">
             <span>Placa de tu vehiculo</span>
             <div class="form-group">
               <InputText v-model="user.user.placa" id="placa" placeholder="Placa de tu vehiculo" />
@@ -86,13 +86,7 @@
               v-model="user.user.payment_method_option"
               id="payment_method"
               placeholder="METODO DE PAGO"
-              :options="
-                siteStore.location?.site?.site_id === 33
-                  ? payment_method_options.filter(option => [6, 8].includes(option.id))
-                  : siteStore.location?.site?.site_id !== 33
-                  ? payment_method_options.filter(option => ![7,6].includes(option.id))
-                  : payment_method_options
-              "
+               :options=" user.user.order_type?.id == 1?  paymen_rules?.[siteStore.location?.site?.site_id]?.filter(pm => pm.id == 6) : paymen_rules?.[siteStore.location?.site?.site_id]"
               optionLabel="name"
             />
           </div>
@@ -138,9 +132,13 @@
 
   const order_types = ref([]);
   const payment_method_options = ref([]);
+  const paymen_rules = ref({})
+
+
 
   onMounted(async () => {
     user.user.order_type = null
+    paymen_rules.value = await fetchService.get(`${URI}/site-payments`);
 
     payment_method_options.value = await fetchService.get(`${URI}/payment_methods`);
     order_types.value = await fetchService.get(`${URI}/get_all_order_types`);
@@ -174,7 +172,7 @@
   // Computed para filtrar los tipos de orden según la sede
   const computedOrderTypes = computed(() => {
     const currentSiteId = siteStore.location?.site?.site_id;
-    if (currentSiteId === 33) {
+    if ([33,35,36].includes(currentSiteId)) {
       // Para la sede 33: permitir "Enviar por uber" (id: 1) y "Pasar a recoger" (id: 2)
       return order_types.value.filter(option => option.id !== 3);
     } else {
