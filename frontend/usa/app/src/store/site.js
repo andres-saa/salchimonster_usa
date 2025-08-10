@@ -22,7 +22,7 @@ export const useSitesStore = defineStore('sites-salchimonster-usa', {
             location: {
               "site":{
                  "site_id":33,
-                 "site_name":"NEW JERSEY NJ",
+                 "site_name":"Union city",
                  "site_address":"2100 kerrigan ave union city nj 07087",
                  "site_phone":"3477929350",
                  "site_business_hours":"string",

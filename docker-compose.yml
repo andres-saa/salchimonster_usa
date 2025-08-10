@@ -16,7 +16,7 @@ services:
 
   proxy:
     image: nginx:1.27-alpine
-    container_name: salchi_final_proxy_dev
+    container_name: salchi_https_proxy_dev
     ports: [ '80:80' ]
     volumes:
       - ./nginx_dev/conf.d:/etc/nginx/conf.d:ro
