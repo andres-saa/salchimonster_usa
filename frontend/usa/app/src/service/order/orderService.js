@@ -121,7 +121,7 @@ export const orderService = {
       if (response.status === 200) {
         cart.sending_order = false;
         cart.last_order = response.data;
-        report.setLoading(true, "enviando tu pedido");
+        report.setLoading(false, "enviando tu pedido");
 
         // pixel.sendTrackingEvent("Purchase", {
         //   total: cart.cart.total_cost, // Este es el total en COP o convertido a otra moneda
@@ -140,7 +140,11 @@ export const orderService = {
         // if (order.payment_method_id !== 6) {
         //   report.visible.show_validate = true
         // }else{
+          if (order.payment_method_id !== 9) {
         router.push("/gracias");
+          }
+                      return response.data
+
         // }
       } else {
         console.error(
