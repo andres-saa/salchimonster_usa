@@ -89,7 +89,9 @@ const open = (product) => {
         path: route.path, // Mantiene la misma ruta
         query: {
             ...route.query,    // Preserva los parámetros de consulta existentes
-            producto: store.getProductId(product)      // Agrega o actualiza el parámetro 'producto'
+            producto: store.getProductId(product),
+            categoria:product?.categoria_id
+             // Agrega o actualiza el parámetro 'producto'
         }
     })
     store.setCurrentProduct(product);

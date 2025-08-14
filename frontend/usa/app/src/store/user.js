@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user-salchi-usa', {
                 phone_number:'',
                 was_reserva:false,
             },
-            lang: { name: 'es', label: 'Español', flag: 'https://flagcdn.com/w20/co.png' }
+            lang:   { name: 'en', label: 'English',  flag: 'https://flagcdn.com/w20/us.png' }
 
 
 

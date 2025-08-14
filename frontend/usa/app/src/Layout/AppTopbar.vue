@@ -164,24 +164,17 @@ const socialLinks = [
 ];
 
 
-// Definir los botones de navegación
-const buttons = [
-  { name: texts[user.lang.name].menus.domicilios, to: '/', icon: 'fa-solid fa-bars' },
-  // { name: texts[user.lang.name].menus.kids, to: '/kids', icon: 'fa-solid fa-bars' },
-  // { name: 'Reserva Cumples', to: '/cumples', icon: 'fa-solid fa-bars' },
-  { name: texts[user.lang.name].menus.sedes, to: '/sedes', icon: 'fa-solid fa-building' },
-  { name: texts[user.lang.name].menus.carta,to: '/menu' , icon: 'fa-solid fa-list' },
-  { name: texts[user.lang.name].menus.rastrear, to: '/rastrear-pedido', icon: 'fa-solid fa-truck' },
-  // { name: texts[user.lang.name].menus.franquicias, to: '/franquicias', icon: 'fa-solid fa-store' },
-  { name: texts[user.lang.name].menus.ayuda, to: '/pqrs-user', icon: 'fa-solid fa-question-circle' },
-  // { name: texts[user.lang.name].menus.colaboraciones, to: '/colaboraciones', icon: 'fa-solid fa-music' },
-  // { name: texts[user.lang.name].menus.sonando, to: '/sonando', icon: 'fa-solid fa-music' },
 
-  // Puedes agregar más botones según sea necesario
-];
-
-// Función para determinar si un botón está activo
-
+const buttons = computed(() => {
+  const t = texts[user.lang.name] || texts.es; // fallback por si acaso
+  return [
+    { name: t.menus.domicilios, to: '/', icon: 'fa-solid fa-bars' },
+    { name: t.menus.sedes, to: '/sedes', icon: 'fa-solid fa-building' },
+    // { name: t.menus.carta, to: '/menu', icon: 'fa-solid fa-list' },
+    { name: t.menus.rastrear, to: '/rastrear-pedido', icon: 'fa-solid fa-truck' },
+    { name: t.menus.ayuda, to: '/pqrs-user', icon: 'fa-solid fa-question-circle' },
+  ];
+});
 
 const isButtonActive = (button) => route.fullPath === button.to;
 

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <banner-carousel></banner-carousel>
+    <!-- <banner-carousel></banner-carousel> -->
     <RouterView></RouterView>
     <BarraCategorias></BarraCategorias>
     <MenuSection></MenuSection>

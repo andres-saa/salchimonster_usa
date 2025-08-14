@@ -15,7 +15,7 @@
   >
     <div class="container" style="justify-content: start; align-items: center">
       <div
-        v-for="(section, index) in cart?.menu?.filter(p => p.products  && p.visible)"
+        v-for="(section, index) in cart?.menu?.filter(p => p.products  && p.visible) || []"
         :key="section.categoria_id"
         :id="'categoryButton-' + section.categoria_id"
         class="container-button"

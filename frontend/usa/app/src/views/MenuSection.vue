@@ -1,329 +1,245 @@
 <template>
   <div class="containerm" lang="es" translate="yes">
     <div
-      v-for="(section, index) in cart?.menu.filter(p => p.products && p.visible )"
+      v-for="(section, index) in filteredSections"
       :key="section.categoria_id"
       :id="section.categoria_id"
       class="container-button"
       :data-category-name="section.categoria_descripcion"
-
-
+      ref="sectionEls"
     >
       <div class="category-header">
-        <span class="category-name" style="margin: 0 1rem;">
-          <b>{{ user.lang.name == 'es'?   section.categoria_descripcion : section.english_name }}</b>
+        <span class="category-name">
+          <b>{{ user.lang.name === 'es' ? section.categoria_descripcion : section.english_name }}</b>
         </span>
       </div>
 
       <div class="section">
         <div
-          v-for="(product, idx) in section?.products?.filter(p => p?.productogeneral_precio > 0 || p?.lista_presentacion[0]?.producto_precio > 0)"
+          v-for="(product, idx) in productsWithPrice(section.products)"
           :key="product.id"
-          style="width: 100%;"
+          class="product-col"
         >
           <div class="card-container">
             <MenuCard
-              style="height: 100%;"
+              class="menu-card"
               :id="`tarjeta-${index}-${idx}`"
               :index="idx + 1"
               :product="product"
+              @click="open(product)"
             />
           </div>
         </div>
-      </div> 
+      </div>
     </div>
   </div>
 </template>
 
-
-
-
 <script setup>
-import { usecartStore } from '../store/shoping_cart';
-import MenuCard from '@/components/cards/MenuCard.vue';
-import { useReportesStore } from '@/store/ventas';
-import { onMounted, onUnmounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { URI } from '@/service/conection';
-const route = useRoute()
-import { useSitesStore } from '@/store/site';
-import { useUserStore } from '@/store/user';
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
+// Components & Stores
+import MenuCard from '@/components/cards/MenuCard.vue'
+import { usecartStore } from '@/store/shoping_cart'
+import { useReportesStore } from '@/store/ventas'
+import { useSitesStore } from '@/store/site'
+import { useUserStore } from '@/store/user'
+import { fetchService } from '@/service/utils/fetchService'
+import { URI } from '@/service/conection'
+// Utils/consts
+// import { URI } from '@/service/conection' // (No se usa aquí)
+
+const route = useRoute()
 const user = useUserStore()
 const siteStore = useSitesStore()
 const store = useReportesStore()
 const cart = usecartStore()
 
+// ─────────────────────────────────────────
+// Computed helpers
+// ─────────────────────────────────────────
+const filteredSections = computed(() =>
+  (cart?.menu || [])
+    .filter(s => s?.products && s?.visible)
+)
 
-// IDs de las categorías (con sus nombres en comentarios)
-const codigos = [
-118,
-120,
-  119,
-  116,
-  117,
-  10,
-  26,
-  8,
-  9,
-  13,
-  27,
-  11,
-  4,
-  5,
-  110, // SALCHIPAPA PARA 2 PERSONAS NJ
-  112, // SALCHIPAPAS PERSONALES NJ
-  113, // PARA COMPARTIR
-  111, // BURGERMONSTER
-  109, // BEBIDAS
-  115,
+function productsWithPrice (list = []) {
+  return list.filter(p => hasPrice(p))
+}
 
+function hasPrice (p) {
+  const general = Number(p?.productogeneral_precio || 0)
+  const firstPres = Number(p?.lista_presentacion?.[0]?.producto_precio || 0)
+  return general > 0 || firstPres > 0
+}
 
-]
-
-
-// console.log(route.query)
-
-const produtct_id = route.query?.producto;
-
-
-
-onMounted(() => {
-    console.log(produtct_id)
-
-    if (produtct_id) {
-        const product = cart.menu?.data?.find(p => cart.getProductId(p) == produtct_id)
-        cart.currentProduct = product
-        cart.visibles.currentProduct = true
-    }
-
-})
-
-
-let scrollTimeout = null
+// ─────────────────────────────────────────
+// Intersection Observer para la sección actual
+// ─────────────────────────────────────────
+const sectionEls = ref([])
 let observer = null
+let cancelSetCurrent = null
 
-onMounted(() => {
+function debounce (fn, delay = 500) {
+  let t
+  return (...args) => {
+    clearTimeout(t)
+    t = setTimeout(() => fn(...args), delay)
+  }
+}
+
+const setCurrentSectionDebounced = debounce((id) => {
+  cart.currentSection = id
+}, 500)
+
+function setupObserver () {
+  if (observer) observer.disconnect()
+
   observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
+    for (const entry of entries) {
       if (entry.isIntersecting) {
-        // Cancelamos el timer anterior
-        if (scrollTimeout) clearTimeout(scrollTimeout)
-        // Programamos la asignación sólo si pasan 500 ms sin más intersecciones
-        scrollTimeout = setTimeout(() => {
-          cart.currentSection = entry.target.id
-        }, 500)
+        const id = entry.target?.id
+        if (id) setCurrentSectionDebounced(id)
       }
-    })
+    }
   }, {
     root: null,
     rootMargin: '-50% 0px -50% 0px',
     threshold: 0
   })
 
-  // Observamos cada sección
-  document.querySelectorAll('.container-button').forEach(el => {
-    observer.observe(el)
-  })
+  sectionEls.value.forEach(el => el && observer.observe(el))
+}
+
+onMounted(async() => {
+  // Si viene ?producto= en la URL, aquí puedes abrir el producto si ya está cargado en el store
+  const produtct_id = route.query?.producto
+  const categoria = route.query.categoria
+       if (produtct_id) {
+        const pe_id = siteStore.location.site?.pe_site_id
+
+        const data = await fetchService.get(`${URI}/tiendas/${pe_id || 1}/products`)
+
+        // const product = cart.menu?.data?.find(p => cart.getProductId(p) == produtct_id)
+        const categoria_candidata = data?.categorias.find(c => c.categoria_id == categoria)
+        console.log(categoria_candidata)
+        cart.currentProduct = categoria_candidata?.products.find(p => p.productogeneral_id == produtct_id)
+        cart.visibles.currentProduct = true
+    }
+
+  // Observa las secciones una vez montadas
+  // setupObserver()
 })
 
 onUnmounted(() => {
   if (observer) observer.disconnect()
-  if (scrollTimeout) clearTimeout(scrollTimeout)
+  if (cancelSetCurrent) clearTimeout(cancelSetCurrent)
 })
 
-const open = (product) => {
-    cart.setCurrentProduct(product);
-    cart.setVisible('currentProduct', true);
+// ─────────────────────────────────────────
+// Acciones UI
+// ─────────────────────────────────────────
+function open (product) {
+  cart.setCurrentProduct(product)
+  cart.setVisible('currentProduct', true)
+}
 
+function smoothScrollTo (categoryId) {
+  // Scroll vertical al contenido
+  const element = document.getElementById(categoryId)
+  if (element) {
+    const offset = 10 * 16 // 10rem en px (asumiendo 1rem=16px)
+    const elementY = element.getBoundingClientRect().top + window.pageYOffset
+    const targetPosition = elementY - offset
 
-};
+    window.scrollTo({ top: targetPosition, behavior: 'smooth' })
+  }
 
-const smoothScrollTo = (categoryId) => {
-    // ----- SCROLL VERTICAL (al contenido) -----
-    const element = document.getElementById(categoryId);
-    if (element) {
-        const offset = 10 * 16;
-        const elementY = element.getBoundingClientRect().top + window.pageYOffset;
-        const targetPosition = elementY - offset;
+  // Marcar sección actual
+  store.currentSection = categoryId
 
-        window.scrollTo({
-            top: targetPosition,
-            behavior: 'smooth'
-        });
+  // Scroll horizontal de la barra de categorías
+  setTimeout(() => {
+    const buttonElement = document.getElementById(`categoryButton-${categoryId}`)
+    if (buttonElement) {
+      buttonElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
     }
-
-    // ----- MARCAR SECCIÓN ACTUAL -----
-    store.currentSection = categoryId;
-
-    // ----- SCROLL HORIZONTAL (a la barra de categorías) -----
-    setTimeout(() => {
-        const buttonElement = document.getElementById(`categoryButton-${categoryId}`);
-        if (buttonElement) {
-            buttonElement.scrollIntoView({
-                behavior: 'smooth',
-                inline: 'center',   // Centra horizontalmente
-                block: 'nearest'       // No desplaza verticalmente innecesariamente
-            });
-        }
-    }, 100);
-};
-
-
-onMounted(() => {
-
-  // if( !siteStore.location?.site?.pe_site_id){
-  //   siteStore.visibles.currentSite = true
-  //   console.log(siteStore.location)
-  // }
-  //   if (cart.currentSection) {
-  //       smoothScrollTo(cart.currentSection)
-  //   }
-})
-
+  }, 100)
+}
 </script>
 
-
-
 <style scoped>
-.category-name {
-    font-size: 2rem;
-    padding: 0;
-    margin: 0;
-    text-transform: uppercase;
-    text-align: center;
-
-}
-
-
-.container-button {
-    /* padding-top: 2rem;
-    padding-bottom: 2rem; */
-}
-
 .containerm {
-    max-width: 1600px;
-    margin:0 auto;
-
-    padding-bottom: 5rem;
-    /* margin-top: 3rem; */
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-bottom: 5rem;
 }
 
+.container-button {}
+
+/* Encabezado de categoría */
 .category-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    /* padding: 0 1rem; */
-
-    margin: 2rem auto;
-    justify-content: center;
-    /* width: max-content; */
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 2rem auto;
+  justify-content: center;
 }
 
-
-.category-img {
-
-    height: 4rem;
-    width: 4rem;
-    aspect-ratio: 1 /1;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 4px solid rgb(255, 255, 255);
-    box-shadow: 0 1rem 1rem rgba(0, 0, 0, 0.2);
-    transition: all ease .3s;
-    cursor: pointer;
-    /* padding: .3rem; */
+.category-name {
+  font-size: 2rem;
+  padding: 0;
+  margin: 0;
+  text-transform: uppercase;
+  text-align: center;
 }
 
-.category-img:hover {
-    transform: translateY(-.5rem);
-    box-shadow: 0 1.5rem 1rem rgba(0, 0, 0, 0.2);
-
-
-}
-
+/* Grid de productos */
 .section {
   display: grid;
-  /* Crea tantas columnas como quepan hasta un máximo de 3 */
   grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
-
-  /* Asegura que no haya más de 3 columnas (3 * 250px = 750px) */
   max-width: 1600px;
   width: 100%;
-
-  /* Centra la grid en la página */
   margin: 0 auto;
-
-  /* Centra el contenido en cada celda de la grid */
-
-  margin: auto;
   gap: 0.5rem;
   padding: 0.5rem;
 }
 
-
-
-@media (max-width: 1544px) {
-    .section {
-         /* Crea tantas columnas como quepan hasta un máximo de 3 */
-  grid-template-columns: repeat(auto-fit, minmax(33%, 1fr));
-
-        max-width: 1200px;
-        margin: auto;
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: auto;
-        /* margin-top: 3rem; */
-    }
+.product-col {
+  width: 100%;
 }
-
-/*
-   Cuando la ventana sea menor a 992px,
-   pasas a 2 columnas.
-*/
-/* @media (max-width: 992px) {
-    .section {
-        grid-template-columns: repeat(2, 1fr);
-    }
-} */
-
-/*
-   Cuando la ventana sea menor a 768px,
-   queda en 1 columna (formato de “tarjeta” vertical).
-*/
-@media (max-width: 870px) {
-    .section {
-        grid-template-columns: repeat(1, 1fr);
-        max-width: 600px;
-        margin: auto;
-    }
-
-    .category-img {
-
-        height: 3rem;
-        width: 3rem;
-
-    }
-
-    .category-name {
-        font-size: 1.5rem;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        text-transform: uppercase;
-        text-align: center;
-
-    }
-
-}
-
 
 .card-container {
-    padding: 1rem;
+  padding: 1rem;
+  width: 100%;
+  height: 100%;
+}
+
+.menu-card {
+  height: 100%;
+}
+
+/* Responsivo */
+@media (max-width: 1544px) {
+  .section {
+    grid-template-columns: repeat(auto-fit, minmax(33%, 1fr));
+    max-width: 1200px;
+    margin: auto;
+  }
+}
+
+@media (max-width: 870px) {
+  .section {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+    margin: auto;
+  }
+
+  .category-name {
+    font-size: 1.5rem;
     width: 100%;
-    height: 100%;
+  }
 }
 </style>
