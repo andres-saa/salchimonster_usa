@@ -4,7 +4,7 @@
     style="
       position: sticky;
       box-shadow: 0 1rem 0.5rem #00000020;
-      top: 3.5rem;
+        transition: all .2s ease;
       padding: 0.2rem;
       z-index: 9999;
       display: flex;
@@ -12,6 +12,7 @@
       background-color: white;
       overflow-x: auto;
     "
+    :style="!sticky? '  top: 3.5rem;' : 'top: 0;'"
   >
     <div class="container" style="justify-content: start; align-items: center">
       <div
@@ -41,7 +42,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, computed, watch } from 'vue'
+import { onMounted, onBeforeUnmount, computed, watch , ref} from 'vue'
 import { usecartStore } from '../store/shoping_cart'
 import { Button } from 'primevue'
 import { URI } from '@/service/conection'
@@ -50,6 +51,31 @@ import { useUserStore } from '@/store/user'
 const user = useUserStore()
 // Store
 const cart = usecartStore()
+
+
+
+const lastScrollY = ref(0)
+const sticky = ref(false)
+const handleScroll = () => {
+  const currentScroll = window.scrollY
+
+  if (currentScroll > lastScrollY.value) {
+    sticky.value = true
+  } else if (currentScroll < lastScrollY.value) {
+    sticky.value = false
+  }
+
+  lastScrollY.value = currentScroll
+}
+
+onMounted(() => {
+  lastScrollY.value = window.scrollY
+  window.addEventListener('scroll', handleScroll)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 // Orden personalizado de las categorías (IDs)
 const codigos = [

@@ -7,17 +7,19 @@
       <button class="cart-button">
         <i class="cart-icon icono pi pi-shopping-cart"></i>
 
-        <div v-for="product in store.cart.slice(0, 4)" :key="product.id" class="product-item">
+        <div v-for="product in store.cart.slice(0, 3)" :key="product.id" class="product-item">
           <Button class="quantity-button" :label="`${product.pedido_cantidad}`" severity="danger" rounded />
           <img class="img-cart" @mouseover="() => vueMenu = true"
             :src="`${URI}/get-image?image_url=${product.productogeneral_urlimagen}`" alt="Product Image" />
         </div>
 
-        <div v-if="store.cart.length > 4" class="extra-products">
+        <div v-if="store.cart.length > 3" class="extra-products">
           <p class="extra-products-text">
-            +{{ store.cart.length - 4 }}
+            +{{ store.cart.length - 3 }}
           </p>
         </div>
+
+        <Button class="go" icon-pos="right" icon="pi pi-arrow-right" style="font-weight: bold;" label="Go"></Button>
       </button>
     </div>
   </div>
@@ -69,7 +71,7 @@ const enviarAlCarro = () => {
   left: 0;
   justify-content: center;
   width: 100%;
-  padding: 0 1rem;
+  padding: 0 0rem;
 
   z-index: 999;
 }
@@ -89,7 +91,7 @@ const enviarAlCarro = () => {
   height: 3.5rem;
   background-color: #ffffff;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
-  padding: 0 3rem;
+  /* padding: 0 3rem; */
   transition: transform 0.3s, opacity 0.3s;
 }
 
@@ -141,6 +143,23 @@ const enviarAlCarro = () => {
   height: 3rem;
   object-fit: contain;
   transition: all 0.3s ease;
+}
+
+.go{
+  animation: parpadeo 1s alternate infinite;
+  transition: all .3s ease;
+  border-radius: .7rem;
+}
+
+@keyframes parpadeo {
+  0%{
+    opacity: .5;
+  }
+  50%{
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  
 }
 
 /* Extra products indicator */

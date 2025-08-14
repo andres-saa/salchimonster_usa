@@ -8,7 +8,7 @@
     </a>
 
   </div>
-  <div class="container" :class="barraClase">
+  <div class="container" :style="!sticky? '  top: 0;' : 'top: -4rem;'" :class="barraClase">
 
     <div class="section-logo section">
       <div class="section-logo--buttons">
@@ -110,7 +110,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted , onBeforeUnmount} from 'vue';
 import { useRoute } from 'vue-router';
 import { Button, Tag, Select } from 'primevue';
 import router from '@/router';
@@ -123,11 +123,39 @@ import { usecartStore } from '@/store/shoping_cart';
 
 const cart = usecartStore()
 
+
+
+
 const siteStore = useSitesStore()
 
 const user = useUserStore()
 
 const route = useRoute();
+
+
+
+const lastScrollY = ref(0)
+const sticky = ref(false)
+const handleScroll = () => {
+  const currentScroll = window.scrollY
+
+  if (currentScroll > lastScrollY.value) {
+    sticky.value = true
+  } else if (currentScroll < lastScrollY.value) {
+    sticky.value = false
+  }
+
+  lastScrollY.value = currentScroll
+}
+
+onMounted(() => {
+  lastScrollY.value = window.scrollY
+  window.addEventListener('scroll', handleScroll)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 const languages = [
   { name: 'es', label: 'Español', flag: 'https://flagcdn.com/w20/co.png' },
@@ -235,9 +263,10 @@ const toggleMobileMenu = () => {
   overflow: hidden;
   padding: 0 3rem;
   display: flex;
-  position: sticky;
+  transition: all .2s ease;
+position: sticky;
   z-index: 999;
-  top: 0;
+
   justify-content: space-between;
   box-shadow: 0 1rem 4rem #00000020;
   align-items: center;
