@@ -263,7 +263,7 @@ const toggleMobileMenu = () => {
   overflow: hidden;
   padding: 0 3rem;
   display: flex;
-  transition: all .2s ease;
+  transition: all .3s ease;
 position: sticky;
   z-index: 999;
 

@@ -4,7 +4,7 @@
     style="
       position: sticky;
       box-shadow: 0 1rem 0.5rem #00000020;
-        transition: all .2s ease;
+        transition: all .3s ease;
       padding: 0.2rem;
       z-index: 9999;
       display: flex;

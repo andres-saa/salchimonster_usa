@@ -16,10 +16,10 @@
   </Dialog>
 
   <!-- Dialog principal para mostrar un producto -->
-  <Dialog :closable="false" v-model:visible="store.visibles.currentProduct" :style="dialogStyle"
+  <Dialog :closable="false" style="border-radius: 0;padding: 0;" v-model:visible="store.visibles.currentProduct" :style="dialogStyle"
     :header="`${store.currentProduct.productogeneral_descripcion}`" :modal="true" class="container product-dialog">
     <!-- Botón para cerrar el diálogo principal -->
-    <Button class="add-cart-button" @click="store.setVisible('currentProduct', false)" severity="danger"
+    <Button :style="butonStyle" class="add-cart-button" @click="store.setVisible('currentProduct', false)" severity="danger"
       icon="pi pi-times"></Button>
 
     <template #header>
@@ -386,10 +386,16 @@ onBeforeUnmount(() => {
 
 const dialogStyle = computed(() => {
   return isBelow1200.value
-    ? { width: '90%', 'max-width': '40rem' }
-    : { width: '90%', 'max-width': '1200px' };
+    ? { width: '100%', 'max-width': '40rem' ,'max-height':'100vh' }
+    : { width: '100%', 'max-width': '1200px','border-radius':'.5rem' };
 });
 
+
+const butonStyle = computed(() => {
+  return isBelow1200.value
+    ? { 'top':'0rem', 'border-radius':'.3rem', 'right':0 }
+    : { 'top':'-1rem' };
+});
 
 
 // Computed para determinar si la pantalla es menor a 1200px
@@ -469,7 +475,7 @@ const toast = useToast();
 
 /* Diálogo principal (producto) */
 .product-dialog {
-  max-width: 91vw !important;
+  /* max-width: 91vw !important; */
 }
 
 /* Botón flotante para cerrar el diálogo principal */
@@ -487,6 +493,8 @@ const toast = useToast();
 /* Contenedor del header del diálogo */
 .header-container {
   display: flex;
+  padding-right: 2rem;
+  /* padding: 0; */
   width: 100%;
   justify-content: space-between;
   background-color: rgb(255, 255, 255);
