@@ -386,7 +386,7 @@ onBeforeUnmount(() => {
 
 const dialogStyle = computed(() => {
   return isBelow1200.value
-    ? { width: '100%', 'max-width': '40rem' ,'min-height':'90vh' }
+    ? { width: '100%', 'max-width': '40rem' ,'min-height':'100%' }
     : { width: '100%', 'max-width': '1200px','border-radius':'.5rem' };
 });
 
