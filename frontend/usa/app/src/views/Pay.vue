@@ -160,7 +160,7 @@
             v-model="user.user.payment_method_option"
             id="payment_method"
             :placeholder="t('payment_method')"
-                   :options="paymen_rules?.[siteStore.location?.site?.site_id]"
+                   :options="user.user.order_type.id === 1 ? paymen_rules?.[siteStore.location?.site?.site_id]?.filter(t => t.id !==8 ) : paymen_rules?.[siteStore.location?.site?.site_id]"
             :optionLabel="user.lang.name == 'en'? 'english_name':  'name'"
           />
         </div>
@@ -413,10 +413,10 @@ onMounted(async () => {
 
 watch(() => user.user.order_type, (new_val) => {
   if (new_val?.id == 2) {
-    siteStore.current_delivery = siteStore.location.neigborhood.delivery_price;
+
     siteStore.location.neigborhood.delivery_price = 0;
   } else {
-    siteStore.location.neigborhood.delivery_price = siteStore.current_delivery;
+    siteStore.location.neigborhood.delivery_price =  user.user.site?.delivery_cost_usd;
 
   }
 });
