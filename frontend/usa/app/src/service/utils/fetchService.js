@@ -14,7 +14,7 @@ export const fetchService = {
             if( loadingMessage ) {
                 store.setLoading(true, loadingMessage);
             } else {
-                store.setLoading(true, 'cargando');
+                store.setLoading(false, 'cargando');
             }
 
             // Configura los headers si están presentes en las opciones

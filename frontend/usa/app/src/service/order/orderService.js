@@ -47,7 +47,7 @@ const preparar_orden = () => {
   const user_data = {
     user_name: user.user.name,
     user_phone: user.user.phone_number?.split(" ").join(""),
-    user_address: ` ${user.user.address} ${site.location?.neigborhood?.name}` || "",
+    user_address:user.user.site?.description || "",
     email: user.user.email
   };
 

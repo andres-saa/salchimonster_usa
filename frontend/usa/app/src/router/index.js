@@ -165,7 +165,7 @@ const router = createRouter({
 
             },
 
-            
+
             {
               path: '/gracias-epayco',
               name: 'gracias-epayco',
@@ -173,6 +173,17 @@ const router = createRouter({
               meta: {  title:'Muchas gracias' },
 
             },
+
+            {
+              path: '/gracias-stripe',
+              name: 'gracias-stripe',
+              component: () => import('@/views/graciasStripe.vue'),
+              meta: {  title:'Muchas gracias' },
+
+            },
+
+
+
           ],
         },
       ],

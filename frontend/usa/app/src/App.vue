@@ -111,7 +111,7 @@ async function loadInitialData () {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--overlay-z);
+  z-index:99999;
   transition: opacity 0.3s ease;
   pointer-events: auto;
 }
@@ -130,8 +130,9 @@ async function loadInitialData () {
   background-color: var(--p-primary-color);
   padding: 3rem;
   position: absolute;
-  border-radius: 50%;
+  /* border-radius: 50%; */
   animation: spin 1s linear infinite;
+  z-index: 999999999999;
   z-index: -1;
 }
 

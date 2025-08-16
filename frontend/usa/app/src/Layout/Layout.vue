@@ -38,7 +38,7 @@ const scrollToTop = () => {
 }
 
 .main-container {
-  background-color: rgba(6, 0, 255, 0.04);
+  background-color:#f8f4fc;
   min-height: 120vh;
 }
 </style>
