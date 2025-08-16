@@ -52,7 +52,7 @@ const preparar_orden = () => {
   };
 
   if (order_type_id == 2) {
-    user_data.user_address = "recoger / pick up",
+    user_data.user_address = "recoger / pick up"
   }
 
   const order = {
@@ -242,7 +242,10 @@ export const orderService = {
 };
 
 function validateOrder(order) {
-
+  const order_type_id = user.user.order_type?.id;
+  if (order_type_id == 2) {
+    user_data.user_address = "recoger / pick up"
+  }
 
   if (
     !order.user_data.user_name ||
