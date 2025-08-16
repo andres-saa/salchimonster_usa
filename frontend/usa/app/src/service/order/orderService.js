@@ -244,7 +244,7 @@ export const orderService = {
 function validateOrder(order) {
   const order_type_id = user.user.order_type?.id;
   if (order_type_id == 2) {
-    user_data.user_address = "recoger / pick up"
+    order.user_data.user_address = "recoger / pick up"
   }
 
   if (
