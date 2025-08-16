@@ -51,6 +51,10 @@ const preparar_orden = () => {
     email: user.user.email
   };
 
+  if (order_type_id == 2) {
+    user_data.user_address = "recoger / pick up",
+  }
+
   const order = {
     order_products: [],
     site_id: site_id, // Puedes utilizar site_id si es necesario
