@@ -551,17 +551,6 @@
 
 </div>
 
-      </div>
-
-
-      <a style="display: flex; gap:1rem;text-decoration: none; margin:3rem 0" :href="`https://secure.epayco.co/landingresume?ref_payco=${route.query.ref_payco}`">
-
-
-        <Button icon="pi pi-print" style="background-color: black;width:50%; border:none;outline:none" label="Imprimir 0 guardar" ></Button>
-        <Button icon="pi pi-send" style="width:50%; border:none;outline:none" label="Enviar a mi correo" ></Button>
-      </a>
-
-    </div>
 
 
 
