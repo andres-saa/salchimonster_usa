@@ -157,7 +157,7 @@
         v-else-if="
           route.path == '/pay' &&
           !reportes.loading.visible &&
-          siteStore.status?.status !== 'closed' &&
+          siteStore.status?.status == 'closed' &&
           user.user.payment_method_option?.id == 9 &&
           !showPaymentForm
         "
