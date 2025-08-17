@@ -70,7 +70,7 @@
           <Button
             style="background-color: black;border: none;"
             :label="t('save')"
-            @click="() => {see_sites = false ; siteStore.location.site = user.user.site?.nearest?.site ; siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_usd }"
+            @click=" save"
             :disabled="!user.user.site?.nearest?.in_coverage"
           />
         </div>
@@ -107,6 +107,8 @@
               <span>{{ opt.name }}</span>
             </label>
           </div>
+
+
         </div>
 
         <span>{{ t('name') }}</span>
@@ -123,6 +125,21 @@
               :value="user.user.site?.nearest?.site?.site_address"
               readonly
             />
+          </div>
+        </template>
+
+        <template v-if="!user.user.order_type || user.user.order_type.id == 2">
+
+          <span>{{ t('site_recoger') }}</span>
+          <div class="form-group" style="display: flex;flex-direction: column;justify-content: start;align-items: start;">
+            <InputText
+              @click="siteStore.setVisible('currentSite', true)"
+              :modelValue="siteStore?.location?.site?.site_name"
+              id="neighborhood"
+              placeholder="Ubicacion"
+              readonly
+            />
+          <Tag> {{ siteStore?.location?.site?.site_address }}</Tag>
           </div>
         </template>
 
@@ -146,7 +163,7 @@
         </div>
 
         <!-- Mostrar campo de placa solo si el método es "Pasar a recoger" (id 2) y la sede es 33/35/36 -->
-        <template v-if="user.user.order_type && user.user.order_type.id === 2 && [33,35,36].includes(siteStore.location?.site?.site_id)">
+        <template v-if="user?.user?.order_type && user?.user?.order_type?.id === 2 && [33,35,36].includes(siteStore.location?.site?.site_id)">
           <span>{{ t('vehicle_plate') }}</span>
           <div class="form-group">
             <InputText v-model="user.user.placa" id="placa" :placeholder="t('vehicle_plate')" />
@@ -160,7 +177,7 @@
             v-model="user.user.payment_method_option"
             id="payment_method"
             :placeholder="t('payment_method')"
-                   :options="user.user.order_type.id === 1 ? paymen_rules?.[siteStore.location?.site?.site_id]?.filter(t => t.id !==8 ) : paymen_rules?.[siteStore.location?.site?.site_id]"
+                   :options="user?.user?.order_type?.id === 1 ? paymen_rules?.[siteStore.location?.site?.site_id]?.filter(t => t.id !==8 ) : paymen_rules?.[siteStore.location?.site?.site_id]"
             :optionLabel="user.lang.name == 'en'? 'english_name':  'name'"
           />
         </div>
@@ -205,6 +222,8 @@ import SelectButton from 'primevue/selectbutton';
 
 const autocompleteError = ref(null); // { code, message_es, message_en, coverage_radius_miles } | null
 
+
+
 // ───────────── I18N mínimo ─────────────
 const user = useUserStore();
 const lang = computed(() => {
@@ -233,6 +252,7 @@ const DICT = {
     notes: 'Notas',
     additional_notes: 'Notas adicionales',
     delivery_method: 'Método de entrega',
+    site_recoger: 'Sede donde vas a recoger'
   },
   en: {
     site_selector: 'Site selector',
@@ -248,6 +268,8 @@ const DICT = {
     finalize_purchase: 'Checkout',
     name: 'Name',
     address: 'Address',
+    site_recoger: 'pick-up place',
+
     phone: 'Phone',
     email: 'Email',
     vehicle_plate: 'Vehicle plate',
@@ -395,12 +417,12 @@ const onAddressSelect = async (e) => {
 onMounted(async () => {
 
   paymen_rules.value = await fetchService.get(`${URI}/site-payments`);
-
+  sites.value = await fetchService.get(`${URI}/sites`)
   payment_method_options.value = await fetchService.get(`${URI}/payment_methods`);
   order_types.value = await fetchService.get(`${URI}/get_all_order_types`);
 
   if (!user.user.order_type) {
-    user.user.order_type = order_types.value.find(o => o.id == 1) || null
+    user.user.order_type = order_types.value.find(o => o.id == 1)
   }
 
 
@@ -411,23 +433,31 @@ onMounted(async () => {
   // }
 });
 
+const sites = ref([])
+
 watch(() => user.user.order_type, (new_val) => {
+
   if (new_val?.id == 2) {
 
     siteStore.location.neigborhood.delivery_price = 0;
+  } else if (new_val?.id == 1 ) {
+    siteStore.location.site = user.user.site?.nearest?.site
+    siteStore.location.neigborhood.delivery_price =  user.user.site?.delivery_cost_usd;
+
   } else {
     siteStore.location.neigborhood.delivery_price =  user.user.site?.delivery_cost_usd;
 
   }
 });
 
-watch(() => siteStore.location?.site?.site_id,() => {
-  user.user.order_type = null
-})
-
 watch(() => user.user.order_type,() => {
   user.user.placa = null
 })
+
+const save = () => {see_sites.value = false ; siteStore.location.site = user.user.site?.nearest?.site ; siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_usd ;
+                  user.user.order_type = order_types.value.find(o => o.id == 1)
+
+            }
 
 // Computed para filtrar los tipos de orden según la sede
 const computedOrderTypes = computed(() => {

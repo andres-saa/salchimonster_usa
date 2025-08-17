@@ -23,6 +23,7 @@ export const useUserStore = defineStore('user-salchi-usa', {
                 address:'',
                 phone_number:'',
                 was_reserva:false,
+                order_type:{}
             },
             lang:   { name: 'en', label: 'English',  flag: 'https://flagcdn.com/w20/us.png' }
 

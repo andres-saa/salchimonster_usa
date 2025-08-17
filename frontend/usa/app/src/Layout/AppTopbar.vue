@@ -71,6 +71,8 @@
       >
         <template #value="sp">
           <img v-if="sp.value" :src="sp.value.flag" class="flag-img" />
+                      <span style="margin-left: .5rem;">{{ sp.value.label?.slice(0,2) }}</span>
+
         </template>
         <template #option="sp">
           <div class="flag-option">

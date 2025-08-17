@@ -81,8 +81,9 @@
 
           <div v-if="currenNeigborhood?.site_id" class="image-overlay">
             <p class="site-info">
-              <span class="brand-name">SALCHIMONSTER - </span>
-              <span class="site-name">{{ currentSite?.site_name }}</span>
+
+              <span class="site-name">{{ currentSite?.site_name }}</span> -
+              <span class="site-name" style="text-transform: lowercase;">{{ currentSite?.site_address }}</span>
             </p>
           </div>
         </div>
@@ -113,7 +114,7 @@ import { useSitesStore } from '@/store/site'
 import { usecartStore } from '@/store/shoping_cart'
 import router from '@/router'
 import { useUserStore } from '@/store/user'
-
+import { fetchService } from '@/service/utils/fetchService'
 const USA_CITY_ID = 15 // ← por defecto: USA
 
 const languages = [
@@ -126,8 +127,18 @@ const store = useSitesStore()
 const cart = usecartStore()
 
 watch(
-  () => store.location.site.site_id,
-  () => location.reload()
+  () => store.location.site.site_id, async(newval) => {
+
+
+
+    // Evita llamadas si no hay site_id aún
+
+      const status  = await fetchService.get(`${URI}/site/${newval}/status`)
+
+
+    if (status) store.status = status
+  }
+
 )
 
 const spinnersView = ref({ ciudad: false, barrio: false })
@@ -172,7 +183,7 @@ const setNeigborhood = async () => {
   }
   store.setLocation(newLocation)
   store.setVisible('currentSite', false)
-  router.push('/')
+
 }
 
 const getCities = async () => {
