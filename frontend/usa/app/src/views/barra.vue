@@ -1,4 +1,6 @@
 <template>
+
+
   <div v-if="
     route.path == '/' || route.path == '/kids'
 
@@ -25,9 +27,14 @@
       </button>
 
     </div>
-    <a :class="[{ hidden2: !showElement }]" v-if="route.fullPath == '/'" target="_blank" href="https://order.chownow.com/order/42376/locations"  style=" right: 1rem;z-index: 99999; box-shadow: 0 1rem 1rem #00000030;border-radius: .5rem;position: fixed;">  <Button size="large" style="background-color: black;font-weight: bold;bottom: 4rem;right: .5rem; border: none;min-width: max-content;" label="New York?"></Button></a>
+
+
+
+    <a :class="[{ hidden2: !showElement }]" v-if="route.fullPath == '/'" target="_blank" href="https://order.chownow.com/order/42376/locations"  style=" right: 1rem;   bottom: 5rem; z-index: 99999; box-shadow: 0 1rem 1rem #00000030;border-radius: .5rem;position: fixed;">  <Button size="large" style="background-color: black;font-weight: bold;border: none; min-width: max-content;" label="New York?"></Button></a>
+
 
   </div>
+
 </template>
 
 <script setup>
