@@ -1,7 +1,7 @@
 <template>
   <div class="p-1 my-5 md:my-0 col-12">
     <!-- Contenedor principal “Resumen” -->
-    <div class="sticky-summary  col-12 p-3 m-0"  :style="!sticky? '  top: 3.5rem;' : 'top: 0rem;'">
+    <div class="sticky-summary  col-12 p-3 m-0"  :style="!sticky? '  top: 3.5rem;' : 'top: .5rem;'">
       <h5><b> {{ t('summary') }} </b></h5>
       <h5><b>{{ t('products') }}</b></h5>
 

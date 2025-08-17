@@ -198,7 +198,7 @@
         </template>
       </div>
 
-      <resumen class="resumen-column" style="margin:0 .3rem;"></resumen>
+      <resumen class="resumen-column" style="margin:0 .3rem;padding-top: .5rem;"></resumen>
     </div>
   </div>
 </template>

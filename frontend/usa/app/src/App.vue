@@ -15,7 +15,7 @@ import { usecartStore } from './store/shoping_cart'
 import { useSitesStore } from './store/site'
 import { fetchService } from './service/utils/fetchService'
 import { URI } from './service/conection'
-
+import Button from 'primevue/button'
 // ─────────────────────────────
 // State
 // ─────────────────────────────
@@ -58,6 +58,13 @@ async function loadInitialData () {
 
 <template>
   <div>
+
+
+
+
+
+
+
     <!-- Overlay de carga -->
     <div
       v-if="reportes.loading.visible"
@@ -91,6 +98,10 @@ async function loadInitialData () {
     <!-- Si lo necesitas luego:
     <SiteDialogSonando />
     -->
+
+
+    <a target="_blank" href="https://order.chownow.com/order/42376/locations"  style="position: fixed ; right: 1rem;z-index: 99999; bottom: 5rem;box-shadow: 0 1rem 1rem #00000030;border-radius: .5rem;">  <Button size="large" style="background-color: black;font-weight: bold;border: none;" label="New York?"></Button></a>
+
   </div>
 </template>
 
