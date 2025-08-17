@@ -85,7 +85,7 @@
     <div class="form-grid">
       <div class="form-column">
         <div
-          style="position: sticky;background-color: #f8f4fc;transition: all .3s ease;z-index: 99999999;padding: .5rem; margin-bottom: 0rem;"
+          style="position: sticky;background-color: #f8f4fc;transition: all .3s ease;z-index: 99999999;margin-bottom: 0rem; padding-top: .5rem;"
           :style="!sticky? '  top: 3.5rem;' : 'top: 0;'"
         >
           <div class="order-type-native" role="radiogroup" :aria-label="t('delivery_method')">
@@ -613,8 +613,8 @@ const computedOrderTypes = computed(() => {
 .form-column {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 0.25rem;
+  gap: .5rem;
+  padding: .5rem;
 }
 
 .form-group :deep(.p-autocomplete) {
