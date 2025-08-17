@@ -8,7 +8,7 @@ import Toast from 'primevue/toast'
 import VistaProducto from './components/Dialogs/VistaProducto.vue'
 import siteDialog from './components/Dialogs/siteDialog.vue'
 import barra from './views/barra.vue'
-
+import { useRoute } from 'vue-router';
 // Stores y servicios
 import { useReportesStore } from './store/ventas'
 import { usecartStore } from './store/shoping_cart'
@@ -22,7 +22,7 @@ import Button from 'primevue/button'
 const cart = usecartStore()
 const siteStore = useSitesStore()
 const reportes = useReportesStore()
-
+const route = useRoute()
 // ─────────────────────────────
 // Lifecycle
 // ─────────────────────────────
@@ -100,7 +100,7 @@ async function loadInitialData () {
     -->
 
 
-    <a target="_blank" href="https://order.chownow.com/order/42376/locations"  style="position: fixed ; right: 1rem;z-index: 99999; bottom: 5rem;box-shadow: 0 1rem 1rem #00000030;border-radius: .5rem;">  <Button size="large" style="background-color: black;font-weight: bold;border: none;" label="New York?"></Button></a>
+    <a v-if="route.fullPath == '/'" target="_blank" href="https://order.chownow.com/order/42376/locations"  style="position: fixed ; right: 1rem;z-index: 99999; bottom: 5rem;box-shadow: 0 1rem 1rem #00000030;border-radius: .5rem;">  <Button size="large" style="background-color: black;font-weight: bold;border: none;" label="New York?"></Button></a>
 
   </div>
 </template>
