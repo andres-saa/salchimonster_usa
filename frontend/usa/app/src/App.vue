@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted , ref, onBeforeMount, onBeforeUnmount} from 'vue'
 
 // UI
 import Toast from 'primevue/toast'
@@ -54,6 +54,37 @@ async function loadInitialData () {
     reportes.loading.visible = false
   }
 }
+
+
+
+const lastScrollY = ref(0)
+const sticky = ref(false)
+const handleScroll = () => {
+  const currentScroll = window.scrollY
+
+  if (currentScroll > lastScrollY.value) {
+    sticky.value = true
+  } else if (currentScroll < lastScrollY.value) {
+    sticky.value = false
+  }
+
+  lastScrollY.value = currentScroll
+}
+
+onMounted(() => {
+  lastScrollY.value = window.scrollY
+  window.addEventListener('scroll', handleScroll)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
+
+const languages = [
+  { name: 'es', label: 'Español', flag: 'https://flagcdn.com/w20/co.png' },
+  { name: 'en', label: 'English',  flag: 'https://flagcdn.com/w20/us.png' }
+]
+
 </script>
 
 <template>
@@ -100,7 +131,6 @@ async function loadInitialData () {
     -->
 
 
-    <a v-if="route.fullPath == '/'" target="_blank" href="https://order.chownow.com/order/42376/locations"  style="position: fixed ; right: 1rem;z-index: 99999; bottom: 5rem;box-shadow: 0 1rem 1rem #00000030;border-radius: .5rem;">  <Button size="large" style="background-color: black;font-weight: bold;border: none;" label="New York?"></Button></a>
 
   </div>
 </template>

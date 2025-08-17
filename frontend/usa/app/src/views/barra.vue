@@ -4,6 +4,8 @@
 
   " class="fixed-cart-bar background" :style="route.path != '/kids'? '  background: linear-gradient(to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));': ''">
     <div v-if="store.cart.length > 0" @click="enviarAlCarro" :class="['cart-bar', { hidden: !showElement }]">
+
+
       <button class="cart-button">
         <i class="cart-icon icono pi pi-shopping-cart"></i>
 
@@ -21,7 +23,10 @@
 
         <Button class="go" icon-pos="right" icon="pi pi-arrow-right" style="font-weight: bold;" label="Go"></Button>
       </button>
+
     </div>
+    <a :class="[{ hidden2: !showElement }]" v-if="route.fullPath == '/'" target="_blank" href="https://order.chownow.com/order/42376/locations"  style=" right: 1rem;z-index: 99999; box-shadow: 0 1rem 1rem #00000030;border-radius: .5rem;position: fixed;">  <Button size="large" style="background-color: black;font-weight: bold;bottom: 4rem;right: .5rem; border: none;min-width: max-content;" label="New York?"></Button></a>
+
   </div>
 </template>
 
@@ -99,6 +104,13 @@ const enviarAlCarro = () => {
 .hidden {
   transform: translateY(5rem);
   opacity: 0;
+  min-width: max-content;
+}
+
+.hidden2 {
+  transform: translatex(5rem);
+  opacity: 0;
+  min-width: max-content;
 }
 
 /* Cart button styling */
@@ -159,7 +171,7 @@ const enviarAlCarro = () => {
     opacity: 1;
     transform: scale(1.05);
   }
-  
+
 }
 
 /* Extra products indicator */
