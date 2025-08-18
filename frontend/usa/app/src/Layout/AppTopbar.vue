@@ -1,5 +1,5 @@
 <template>
-  <div style="display: flex;justify-content: end; padding: 0rem 1rem ;gap: 0rem; width: 100%;background-color: black">
+  <div class="bar-pc" style="justify-content: end; padding: 0rem 1rem ;gap: 0rem; width: 100%;background-color: black">
     <a :href="i.href" v-for="i in socialLinks">
       <Button size="small" class="social-btn" style="color: white;" text> <i style="color: white;font-weight: bold;"
           :class="i.icon">
@@ -8,6 +8,50 @@
     </a>
 
   </div>
+
+
+
+
+  <div class="bar-movil" style="justify-content: space-between; padding: 0rem 1rem ;gap: 0rem; width: 100%;background-color: black">
+
+<div style="display: flex;align-items: center;gap: 1rem;">
+  <i class="pi pi-map-marker" @click="siteStore.visibles.currentSite = true"></i>
+  <div class="site-info2" @click="siteStore.visibles.currentSite = true">
+
+    <div class="site-info-status">
+      <!-- <span class="city-name">{{ siteStore.location?.city?.city_name }}</span> -->
+      <Tag v-if="siteStore.status?.status == 'open'" class="status-tag">Abierto</Tag>
+      <Tag v-else-if="siteStore.status?.status" class="closed-tag">Cerrado</Tag>
+      <!-- <Tag v-else="siteStore.status?.status" class="closed-tag">Seleccionar sede</Tag> -->
+
+    </div>
+    <div class="site-info-name" v-if="siteStore.location?.site?.site_id">
+      <span class="city-name" style="color: white;"> {{ siteStore.location?.site.site_name }}</span>
+    </div>
+  </div>
+</div>
+
+
+<div style="display: flex;align-items: center;">
+
+  <a :href="i.href" v-for="i in socialLinks">
+  <Button size="small" class="social-btn" style="color: white;" text> <i style="color: white;font-weight: bold;"
+      :class="i.icon">
+    </i>
+  </Button>
+</a>
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+
   <div class="container" :style="!sticky? '  top: 0;' : 'top: -4rem;'" :class="barraClase">
 
     <div class="section-logo section">
@@ -16,7 +60,7 @@
           src="https://backend.salchimonster.com/read-photo-product/xai0dVnL" alt="Logo" />
       </div>
 
-      <i class="pi pi-map-marker" @click="siteStore.visibles.currentSite = true"></i>
+      <i class="pi pi-map-marker bar-marker" @click="siteStore.visibles.currentSite = true"></i>
       <div class="site-info" @click="siteStore.visibles.currentSite = true">
 
         <div class="site-info-status">
@@ -71,7 +115,7 @@
       >
         <template #value="sp">
           <img v-if="sp.value" :src="sp.value.flag" class="flag-img" />
-                      <span style="margin-left: .5rem;">{{ sp.value.label?.slice(0,2) }}</span>
+                      <span style="margin-left: .5rem;">{{ sp.value.label }}</span>
 
         </template>
         <template #option="sp">
@@ -185,7 +229,7 @@ const socialLinks = [
   },
   {
     icon: 'pi pi-whatsapp',
-    href: 'https://wa.link/5mq1t0'
+    href: 'https://api.whatsapp.com/send?phone=13477929350'
   },
   {
     icon: 'pi pi-youtube',
@@ -353,7 +397,7 @@ position: sticky;
   display: none;
 }
 
-.site-info {
+.site-info, .pi-map-marker {
   cursor: pointer;
 }
 
@@ -377,6 +421,12 @@ position: sticky;
   /* pointer-events: hover; */
 }
 
+.bar-pc, .bar-movil{
+  display: flex;
+}
+
+
+
 /* Responsividad */
 @media (max-width: 1024px) {
   .section {
@@ -390,7 +440,22 @@ position: sticky;
   .site-info-movil {
     display: flex;
   }
+
+  .bar-marker{
+    display: none;
+  }
+
+  .site-info{
+    display: none;
+  }
+  .bar-pc{
+    display: none;
+  }
 }
+
+
+
+
 
 /* Estilos del logo */
 .section-logo {
@@ -494,4 +559,14 @@ i {
 .barra-oscura .button-nav.active {
   color: white;
 }
+
+
+@media (width > 1024px) {
+
+.bar-movil{
+  display: none;
+}
+}
+
+
 </style>

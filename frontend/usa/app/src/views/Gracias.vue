@@ -123,7 +123,7 @@ onMounted(() => {
 
     console.log(text.value);
 
-    
+
     textConfirmar.value = `Hola, para validar el pedido 🔥 *#${store.last_order}* 🔥`;
 
 });
@@ -133,8 +133,8 @@ onMounted(() => {
 
 const whatsappUrl = computed(() => {
     const baseUrl = 'https://api.whatsapp.com/send';
-    let phone = 573053447255
-    store.last_order.split('-')[0] == 'NEW'?  phone = 13477929350 :  phone = 573053447255
+    let phone = 13477929350
+    store.last_order.split('-')[0] == 'NEW'?  phone = 13477929350 :  phone = 13477929350
     const urlParams = new URLSearchParams({
         phone: phone,
         text: text.value
@@ -147,8 +147,8 @@ const whatsappUrl = computed(() => {
 
 const whatsappUrlConfirmar = computed(() => {
     const baseUrl = 'https://api.whatsapp.com/send';
-    let phone = 573053447255
-    store.last_order.split('-')[0] == 'NEW'?  phone = 13477929350 :  phone = 573053447255
+    let phone = 13477929350
+    store.last_order.split('-')[0] == 'NEW'?  phone = 13477929350 :  phone = 13477929350
     const urlParams = new URLSearchParams({
         phone: phone,
         text: textConfirmar.value

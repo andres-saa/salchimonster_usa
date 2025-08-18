@@ -214,7 +214,7 @@ router.beforeEach(async (to, from, next) => {
     document.title = `${to.meta.title} - ${to.params.menu_name}`;
   } else {
     // Configurar un título por defecto si no hay 'menu_name'
-    document.title = to.meta.title || 'Salchimonster';
+    document.title = to.meta.title || 'Salchimonster - usa';
   }
   next()
 })

@@ -1,23 +1,23 @@
 <template>
   <div class="container-card shadow-3 col-12 product-card" @click="open(props.product)">
-      <div class="imagen">
+      <div class="imagen" style="grid-area: imagen;">
           <!-- Imagen con lazy loading personalizado -->
-          <img ref="productImage" class="imagen-producto lazy"
+          <img  ref="productImage" class="imagen-producto lazy"
               :data-src="`${URI}/get-image?image_url=${props.product.productogeneral_urlimagen}`"
               src="https://media.tenor.com/IfbOs_yh89AAAAAM/loading-buffering.gif" alt="Descripción del producto" />
       </div>
 
-      <div class="texto">
+      <div class="texto" style="grid-area: nombre;padding-right: 1rem;">
           <h3 style="text-transform: uppercase;">
               <b>{{ user.lang.name == 'es'? props.product.productogeneral_descripcion : props.product.english_name }}</b>
           </h3>
 
           <!-- Contenedor interno que agrupa la descripción y el precio -->
-          <div class="texto-content">
-              <!-- Fila de arriba (vacía en este ejemplo, la puedes eliminar si no la usas) -->
-              <div class="flex-row-center-space-between">
-                  <!-- Puedes agregar contenido aquí si lo deseas -->
-              </div>
+
+      </div>
+
+      <div class="texto-content" style="grid-area: descripcion;align-items: center;">
+
 
               <!-- Descripción -->
               <span class="max-width-100">
@@ -26,46 +26,14 @@
 
 
 
-              <div>
-
-                  <div style="display: flex;gap: .5rem;flex-wrap: wrap; justify-content: end; width: 100%;" v-if="porcentajeDescuento && valorAhorrado &&  user.lang.name == 'es' ">
-
-<Tag   style="background-color: black;color: white;font-size: 1.2rem;" >
-{{ porcentajeDescuento }}
-  </Tag>
-
-
-<Tag   style="background-color: red;color: white;font-size: 1.2rem;" >
-Ahorras {{ valorAhorrado }}
-  </Tag>
-
-
-
-
-</div>
-
-
-<div  style="display: flex;gap: .5rem; flex-wrap: wrap; justify-content: end; width: 100%;">
-
-<Tag v-if="porcentajeDescuento && valorAhorrado &&   user.lang.name != 'es'" style="background-color: black;color: white;font-size: 1.2rem;" >
-{{ porcentajeDescuento }} Off
-</Tag>
-
-
-<Tag v-if="porcentajeDescuento && valorAhorrado &&   user.lang.name != 'es'" style="background-color: red;color: white;font-size: 1.2rem;" >
-Save {{ valorAhorrado }}
-</Tag>
-
-
-
-
-</div>
-
-
-
-              </div>
               <!-- Fila de acciones (corazón y precio) -->
-              <div class="flex-row-center-space-between">
+
+
+
+          </div>
+
+
+          <div style="grid-area: price;" class="flex-row-center-space-between">
                   <!-- <Button icon="pi pi-heart text-xl p-0 m-0" text rounded class="heart-button" /> -->
 
 
@@ -98,10 +66,46 @@ Save {{ valorAhorrado }}
               </div>
 
 
-          </div>
-      </div>
 
 
+              <div style="grid-area: tags;">
+
+<div style="display: flex;gap: .5rem;flex-wrap: wrap; justify-content: end; width: 100%;" v-if="porcentajeDescuento && valorAhorrado &&  user.lang.name == 'es' ">
+
+<Tag   style="background-color: black;color: white;font-size: 1.2rem;" >
+{{ porcentajeDescuento }}
+</Tag>
+
+
+<Tag   style="background-color: red;color: white;font-size: 1.2rem;" >
+Ahorras {{ valorAhorrado }}
+</Tag>
+
+
+
+
+</div>
+
+
+<div  style="display: flex;gap: .5rem; flex-wrap: wrap; justify-content: end; width: 100%;">
+
+<Tag v-if="porcentajeDescuento && valorAhorrado &&   user.lang.name != 'es'" style="background-color: black;color: white;font-size: 1.2rem;" >
+{{ porcentajeDescuento }} Off
+</Tag>
+
+
+<Tag v-if="porcentajeDescuento && valorAhorrado &&   user.lang.name != 'es'" style="background-color: red;color: white;font-size: 1.2rem;" >
+Save {{ valorAhorrado }}
+</Tag>
+
+
+
+
+</div>
+
+
+
+</div>
 
       <!-- Botón flotante para añadir al carrito -->
       <Button class="add-to-cart-button" @click.stop="addToCart(props.product)" severity="danger" rounded> <i
@@ -284,8 +288,9 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 1rem;
   height: 100%;
-  flex-direction: column;
+  /* flex-direction: column; */
   justify-content: space-between;
+  align-items: center;
 }
 
 /* Fila con “display: flex; justify-content: space-between; align-items: center;” */
@@ -324,20 +329,26 @@ onBeforeUnmount(() => {
 
 .container-card {
   display: grid;
-  gap: 1rem;
-  /* Spacing between grid items */
-  grid-template-columns: 1fr;
-  height: 100%;
+  gap: 0rem 1rem;
+  align-items: center;
+  justify-content: end;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-areas:
+    "nombre nombre nombre"
+    "imagen descripcion descripcion"
+    "tags tags  tags"
+    "price price  price";
   width: 100%;
-  max-width: 600px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 1rem;
   box-shadow: 0 1rem 1rem rgba(160, 160, 160, 0.3);
   border-radius: 0.5rem;
-  /* Curvatura específica */
   background-color: #fff;
   transition: all ease 0.3s;
   cursor: pointer;
+  position: relative;
+  height: 100%;
 }
 
 .character {
@@ -362,21 +373,6 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 20000px) {
-  .container-card {
-      grid-template-columns: 1fr 2fr;
-      width: 100%;
-  }
-
-  .imagen,
-  .texto {
-      width: 100%;
-  }
-
-  .character {
-      display: inline;
-  }
-}
 
 /* Animación e imágenes */
 .rating {

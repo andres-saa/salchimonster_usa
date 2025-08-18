@@ -17,7 +17,7 @@
 
   <!-- Dialog principal para mostrar un producto -->
   <Dialog :closable="false" style="border-radius: 0;padding: 0;" v-model:visible="store.visibles.currentProduct" :style="dialogStyle"
-    :header="`${store.currentProduct.productogeneral_descripcion}`" :modal="true" class="container product-dialog">
+    :header="`${store.currentProduct?.productogeneral_descripcion}`" :modal="true" class="container product-dialog">
     <!-- Botón para cerrar el diálogo principal -->
     <Button :style="butonStyle" class="add-cart-button" @click="store.setVisible('currentProduct', false)" severity="danger"
       icon="pi pi-times"></Button>
@@ -30,8 +30,8 @@
         <h3>
           {{
             formatoPesosColombianos(
-              store.currentProduct.productogeneral_precio ||
-              store.currentProduct.lista_presentacion[0].producto_precio
+              store?.currentProduct?.productogeneral_precio ||
+              store?.currentProduct?.lista_presentacion?.[0]?.producto_precio
             )
           }}
         </h3>
@@ -345,6 +345,13 @@ watch(
   }
 );
 
+
+watch(()=> route.query , (newval) => {
+  if (!newval?.producto){
+    store.visibles.currentProduct = false
+  }
+})
+
 /**
  * Control de adiciones v2 (?)
  */
@@ -393,7 +400,7 @@ const dialogStyle = computed(() => {
 
 const butonStyle = computed(() => {
   return isBelow1200.value
-    ? { 'top':'0rem', 'border-radius':'.3rem', 'right':0 }
+    ? { 'top':'0rem', 'border-radius':'0  0   0 .5rem', 'right':0 }
     : { 'top':'-1rem' };
 });
 
@@ -528,6 +535,7 @@ const toast = useToast();
   background-color: white;
   border-radius: 1rem;
   padding: 0;
+  min-height: 100%;
   padding-bottom: 0;
   display: grid;
   gap: 2rem;
