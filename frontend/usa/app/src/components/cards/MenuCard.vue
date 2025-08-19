@@ -108,7 +108,7 @@ Save {{ valorAhorrado }}
 </div>
 
       <!-- Botón flotante para añadir al carrito -->
-      <Button class="add-to-cart-button" @click.stop="addToCart(props.product)" severity="danger" rounded> <i
+      <Button v-if=" sitestore.location.site.site_id !== 33" class="add-to-cart-button" @click.stop="addToCart(props.product)" severity="danger" rounded> <i
               class="pi pi-plus text-xl fw-100" style="font-weight: bold;"></i> </Button>
   </div>
 </template>
@@ -124,6 +124,9 @@ import router from '@/router';
 import { URI } from '@/service/conection';
 const route = useRoute()
 import { useUserStore } from '@/store/user';
+import { useSitesStore } from '@/store/site';
+
+const sitestore = useSitesStore()
 const user = useUserStore();
 // Acceso al store del carrito
 const store = usecartStore();

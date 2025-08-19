@@ -94,6 +94,7 @@
         <Button v-random-hover-color="{ opacity: .3 }" class="button-nav"
           :class="isButtonActive(button) ? 'active' : ''" :label="button.name"></Button>
       </RouterLink>
+
     </div>
 
 
