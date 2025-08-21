@@ -4,8 +4,9 @@ server {
 
     ssl_certificate     /etc/letsencrypt/live/usa.salchimonster.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/usa.salchimonster.com/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/www.usa.salchimonster.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/www.usa.salchimonster.com/privkey.pem;
     include /etc/nginx/conf.d/ssl_params.conf;
-
     location / {
         proxy_pass http://front_usa:80;
         include /etc/nginx/proxy_params;
