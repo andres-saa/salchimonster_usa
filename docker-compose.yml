@@ -2,7 +2,7 @@ version: '3.9'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: test_postgres_dev
+    container_name: test2_postgres_dev
     env_file: ./db/.env
     environment:
       - TZ=America/Bogota
@@ -15,7 +15,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:8.10
-    container_name: test_pgadmin_dev
+    container_name: test2_pgadmin_dev
     env_file: ./db/.env
     environment:
       - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
@@ -44,7 +44,7 @@ services:
 
   proxy:
     image: nginx:1.27-alpine
-    container_name: test_proxy_dev
+    container_name: test2_proxy_dev
     ports: [ '80:80' ]
     volumes:
       - ./nginx_dev/conf.d:/etc/nginx/conf.d:ro
