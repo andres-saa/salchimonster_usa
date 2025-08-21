@@ -1,5 +1,27 @@
 version: '3.9'
 services:
+  postgres:
+    image: postgres:16-alpine
+    env_file: ./db/.env
+    environment:
+      - TZ=America/Bogota
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:8.10
+    env_file: ./db/.env
+    environment:
+      - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
+      - PGADMIN_CONFIG_LOGIN_BANNER='"Bienvenido a pgAdmin"'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./db/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on: [postgres]
+    restart: unless-stopped
+
   front_usa:
     build: { context: ./frontend/usa, target: prod }
     container_name: front_usa
@@ -12,10 +34,10 @@ services:
     ports: [ '80:80', '443:443' ]
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:rw
-      - ./nginx/proxy_params:/etc/nginx/proxy_params:ro
+      - ./nginx/proxy_params.conf:/etc/nginx/proxy_params.conf:ro
       - ./nginx/certbot/www:/var/www/certbot:ro
       - ./nginx/letsencrypt:/etc/letsencrypt:ro
-    depends_on: [front_usa]
+    depends_on: [postgres, pgadmin, front_usa]
     restart: unless-stopped
 
   certbot:
@@ -26,5 +48,9 @@ services:
       - ./nginx/letsencrypt:/etc/letsencrypt
     depends_on: [proxy]
     entrypoint: sh
-    command: -c "certbot certonly -n --keep-until-expiring --webroot -w /var/www/certbot -d usa.salchimonster.com -d www.usa.salchimonster.com --email 'andrew19f@gmail.com' --agree-tos --no-eff-email ; trap exit TERM; while :; do certbot renew -n --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
+    command: -c "if [ -n 'pgadmin.salchimonster.com usa.salchimonster.com www.usa.salchimonster.com' ]; then for d in pgadmin.salchimonster.com usa.salchimonster.com www.usa.salchimonster.com; do certbot certonly -n --keep-until-expiring --webroot -w /var/www/certbot -d $d --email \"andrew19f@gmail.com\" --agree-tos --no-eff-email ; done; fi; trap exit TERM; while :; do certbot renew -n --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
     restart: unless-stopped
+
+volumes:
+  pg_data:
+  pgadmin_data:

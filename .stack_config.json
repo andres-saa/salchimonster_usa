@@ -1,0 +1,13 @@
+{
+  "project": "test",
+  "domain": "salchimonster.com",
+  "email": "andrew19f@gmail.com",
+  "staging": false,
+  "backs": [],
+  "fronts": [
+    {
+      "name": "usa",
+      "kind": "vue"
+    }
+  ]
+}
