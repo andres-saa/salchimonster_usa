@@ -1,8 +1,4 @@
 version: '3.9'
-volumes:
-  certbot-www:
-  letsencrypt:
-
 services:
   front_usa:
     build: { context: ./frontend/usa, target: prod }
@@ -15,10 +11,10 @@ services:
     container_name: proxy
     ports: [ '80:80', '443:443' ]
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:rw
       - ./nginx/proxy_params:/etc/nginx/proxy_params:ro
-      - certbot-www:/var/www/certbot:ro
-      - letsencrypt:/etc/letsencrypt:ro
+      - ./nginx/certbot/www:/var/www/certbot:ro
+      - ./nginx/letsencrypt:/etc/letsencrypt:ro
     depends_on: [front_usa]
     restart: unless-stopped
 
@@ -26,29 +22,9 @@ services:
     image: certbot/certbot:latest
     container_name: certbot
     volumes:
-      - certbot-www:/var/www/certbot
-      - letsencrypt:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+      - ./nginx/letsencrypt:/etc/letsencrypt
     depends_on: [proxy]
     entrypoint: sh
-    command: -c " certbot certonly -n --keep-until-expiring \
-        --webroot -w /var/www/certbot \
-        -d usa.salchimonster.com -d www.usa.salchimonster.com \
-        --email 'andrew19f@gmail.com' --agree-tos --no-eff-email \
-      && while :; do certbot renew -n --webroot -w /var/www/certbot --quiet; sleep 12h; done "
-    restart: unless-stopped
-
-  # Recarga Nginx cuando cambian los certs
-  nginx_reloader:
-    image: alpine:3.20
-    container_name: nginx_reloader
-    volumes:
-      - letsencrypt:/etc/letsencrypt:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    entrypoint: sh
-    command: -c "
-      apk add --no-cache inotify-tools docker-cli >/dev/null 2>&1 || apk add --no-cache inotify-tools docker >/dev/null 2>&1;
-      while inotifywait -e close_write,create,delete,move -r /etc/letsencrypt/live; do
-        docker kill -s HUP proxy || true;
-      done "
-    depends_on: [proxy, certbot]
+    command: -c "certbot certonly -n --keep-until-expiring --webroot -w /var/www/certbot -d usa.salchimonster.com -d www.usa.salchimonster.com --email 'andrew19f@gmail.com' --agree-tos --no-eff-email ; trap exit TERM; while :; do certbot renew -n --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
     restart: unless-stopped
