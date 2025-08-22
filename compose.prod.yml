@@ -26,7 +26,5 @@ services:
       - ./nginx/letsencrypt:/etc/letsencrypt
     depends_on: [proxy]
     entrypoint: sh
-    command: -c "if [ -n 'usa.salchimonster.com www.usa.salchimonster.com' ]; then for d in usa.salchimonster.com www.usa.salchimonster.com; do certbot certonly -n --keep-until-expiring --webroot -w /var/www/certbot -d $d --email \"andrew19f@gmail.com\" --agree-tos --no-eff-email ; done; fi; trap exit TERM; while :; do certbot renew -n --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
+    command: -c "if [ -n 'usa.salchimonster.com www.usa.salchimonster.com' ]; then for d in usa.salchimonster.com www.usa.salchimonster.com; do certbot certonly -n --keep-until-expiring --webroot -w /var/www/certbot -d $$d --email \"andrew19f@gmail.com\" --agree-tos --no-eff-email ; done; fi; trap exit TERM; while :; do certbot renew -n --webroot -w /var/www/certbot --quiet || true; sleep 12h; done"
     restart: unless-stopped
-
-volumes:
