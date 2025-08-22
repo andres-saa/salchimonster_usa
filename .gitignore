@@ -1,4 +1,3 @@
-db/pgadmin/*
 !db/pgadmin/servers.json
 nginx/letsencrypt/*
 node_modules/

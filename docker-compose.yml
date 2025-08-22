@@ -1,33 +1,5 @@
 version: '3.9'
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: test2_postgres_dev
-    env_file: ./db/.env
-    environment:
-      - TZ=America/Bogota
-    volumes:
-      - ./db/init:/docker-entrypoint-initdb.d:ro
-      - pg_data:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
-    restart: unless-stopped
-
-  pgadmin:
-    image: dpage/pgadmin4:8.10
-    container_name: test2_pgadmin_dev
-    env_file: ./db/.env
-    environment:
-      - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
-      - PGADMIN_CONFIG_LOGIN_BANNER='"Bienvenido a pgAdmin"'
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-      - ./db/pgadmin/servers.json:/pgadmin4/servers.json:ro
-    ports:
-      - '5050:80'
-    depends_on: [postgres]
-    restart: unless-stopped
-
   front_usa:
     build: { context: ./frontend/usa, target: dev }
     container_name: front_usa
@@ -44,15 +16,13 @@ services:
 
   proxy:
     image: nginx:1.27-alpine
-    container_name: test2_proxy_dev
+    container_name: ssl_proxy_dev
     ports: [ '80:80' ]
     volumes:
       - ./nginx_dev/conf.d:/etc/nginx/conf.d:ro
       - ./nginx_dev/proxy_params.conf:/etc/nginx/proxy_params.conf:ro
-    depends_on: [postgres, pgadmin, front_usa]
+    depends_on: [front_usa]
     restart: unless-stopped
 
 volumes:
   front_usa_node_modules:
-  pg_data:
-  pgadmin_data:

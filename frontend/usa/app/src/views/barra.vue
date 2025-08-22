@@ -5,7 +5,7 @@
     route.path == '/' || route.path == '/kids'
 
   " class="fixed-cart-bar background" :style="route.path != '/kids'? '  background: linear-gradient(to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));': ''">
-    <div v-if="store.cart.length > 0 && sitestore.location.site.site_id !== 33" @click="enviarAlCarro" :class="['cart-bar', { hidden: !showElement }]">
+    <div v-if="store.cart.length > 0 && sitestore.location.site.site_id !== 37" @click="enviarAlCarro" :class="['cart-bar', { hidden: !showElement }]">
 
 
       <button class="cart-button">
@@ -30,7 +30,7 @@
 
 
 
-    <a :class="[{ hidden2: !showElement }]" v-if="sitestore.location.site.site_id == 33" target="_blank" href="https://ordering.chownow.com/order/42376/locations/64019"  style=" right: .5rem;   bottom: 5rem; z-index: 99999; box-shadow: 0 1rem 1rem #00000030;border-radius: 50%;position: fixed;">  <Button class="go" size="large" style="background-color: black; border-radius: 50%;aspect-ratio: 1 / 1; font-weight: bold;border: none; min-width: max-content;" :label="user.lang.name == 'es'? 'Ordena' : 'Order!'"></Button></a>
+
 
 
   </div>

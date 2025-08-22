@@ -108,7 +108,7 @@ Save {{ valorAhorrado }}
 </div>
 
       <!-- Botón flotante para añadir al carrito -->
-      <Button v-if=" sitestore.location.site.site_id !== 33" class="add-to-cart-button" @click.stop="addToCart(props.product)" severity="danger" rounded> <i
+      <Button v-if=" sitestore.location.site.site_id !== 37" class="add-to-cart-button" @click.stop="addToCart(props.product)" severity="danger" rounded> <i
               class="pi pi-plus text-xl fw-100" style="font-weight: bold;"></i> </Button>
   </div>
 </template>

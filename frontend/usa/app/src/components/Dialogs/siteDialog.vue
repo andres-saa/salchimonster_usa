@@ -127,19 +127,28 @@ const store = useSitesStore()
 const cart = usecartStore()
 
 watch(
-  () => store.location.site.site_id, async(newval) => {
+  () => store.location.site,
+  async (newval, oldval) => {
+    if (!newval?.site_id) return; // evita llamadas innecesarias
 
+    // obtén el status normalmente
+    const status = await fetchService.get(`${URI}/site/${newval.site_id}/status`);
 
+    if (newval.site_id == 37) {
+      // 🔹 revertir el cambio en el store ANTES de navegar
+      store.location.site = oldval;
 
-    // Evita llamadas si no hay site_id aún
+      // 🔹 navegar a la URL externa
+      window.location.href = 'https://ordering.chownow.com/order/42376/locations/64019';
+      return; // salimos para no sobreescribir el store.status
+    }
 
-      const status  = await fetchService.get(`${URI}/site/${newval}/status`)
-
-
-    if (status) store.status = status
+    if (status) {
+      store.status = status;
+    }
   }
+);
 
-)
 
 const spinnersView = ref({ ciudad: false, barrio: false })
 const cities = ref([])

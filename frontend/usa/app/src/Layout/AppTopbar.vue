@@ -29,10 +29,14 @@
       <span class="city-name" style="color: white;"> {{ siteStore.location?.site.site_name }}</span>
     </div>
   </div>
+
+
 </div>
 
 
 <div style="display: flex;align-items: center;">
+
+
 
   <a :href="i.href" v-for="i in socialLinks">
   <Button size="small" class="social-btn" style="color: white;" text> <i style="color: white;font-weight: bold;"
@@ -260,16 +264,16 @@ const isButtonActive = (button) => route.fullPath === button.to;
 // Mapeo de rutas a clases de estilo
 const estilosPorRuta = {
   '/': 'barra-clara',
-  '/sedes': 'barra-sedes',
-  '/menu': 'barra-carta',
-  '/rastrear-pedido': 'barra-clara',
+  '/sedes': 'barra-clara',
+  '/menu': 'barra-clara',
+  '/rastrear-pedido':'barra-clara',
   '/franquicias': 'barra-clara',
   '/pqrs-user': 'barra-clara',
   '/hola': 'barra-clara',
-  '/sonando': 'barra-oscura',
-  '/pqrs-user': 'barra-oscura',
+  '/sonando': 'barra-clara',
+  '/pqrs-user': 'barra-clara',
   '/kids':'barra-carta',
-  '/colaboraciones': 'barra-oscura'
+  '/colaboraciones': 'barra-clara'
 
 
   // Añade más rutas y sus clases correspondientes aquí

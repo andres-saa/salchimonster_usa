@@ -3,7 +3,7 @@ set -eu
 (
   TARGET="/etc/nginx/conf.d/reverse-proxy.https.conf"
   DISABLED="/etc/nginx/conf.d/reverse-proxy.https.conf.disabled"
-  FIRST_DOMAIN="pgadmin.salchimonster.com"
+  FIRST_DOMAIN="usa.salchimonster.com"
   if [ -n "$FIRST_DOMAIN" ]; then
     while [ ! -f "/etc/letsencrypt/live/$FIRST_DOMAIN/fullchain.pem" ]; do
       sleep 5

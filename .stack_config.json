@@ -1,8 +1,9 @@
 {
-  "project": "test2",
+  "project": "ssl",
   "domain": "salchimonster.com",
   "email": "andrew19f@gmail.com",
   "staging": false,
+  "use_db": false,
   "backs": [],
   "fronts": [
     {
