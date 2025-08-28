@@ -317,7 +317,8 @@ const orderTypeIdStr = computed({
 const stripeApiBase = import.meta.env.VITE_STRIPE_API_URI || 'https://api.stripe.salchimonster.com';
 
 const see_sites = ref(false)
-const uri_api_google =  import.meta.env.VITE_STRIPE_API_URI || 'https://api.stripe.salchimonster.com';
+// const uri_api_google =  import.meta.env.VITE_STRIPE_API_URI || 'https://api.stripe.salchimonster.com';
+const uri_api_google =  import.meta.env.VITE_STRIPE_API_URI || 'http://localhost:8000';
 
 // Estado del autocomplete
 const addressQuery = ref('');

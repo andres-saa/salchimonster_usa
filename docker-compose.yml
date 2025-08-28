@@ -17,7 +17,7 @@ services:
   proxy:
     image: nginx:1.27-alpine
     container_name: test_usa_proxy_dev
-    ports: [ '80:80' ]
+    # ports: [ '80:80' ]
     volumes:
       - ./nginx_dev/conf.d:/etc/nginx/conf.d:ro
       - ./nginx_dev/proxy_params.conf:/etc/nginx/proxy_params.conf:ro
