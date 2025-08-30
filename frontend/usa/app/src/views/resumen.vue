@@ -218,7 +218,7 @@ import { formatoPesosColombianos } from '@/service/utils/formatoPesos';
 import { usecartStore } from '@/store/shoping_cart';
 import { useSitesStore } from '@/store/site';
 import { useRoute } from 'vue-router';
-import { orderService } from '@/service/order/orderService';
+import { orderService } from '@/service/order/orderService.ts';
 import { onMounted, ref, watch, nextTick, onBeforeUnmount, computed } from 'vue';
 import { useUserStore } from '@/store/user';
 import Button from 'primevue/button';
