@@ -50,9 +50,9 @@
             <small style="opacity:.8;">(code: {{ user.user.site.error.code }})</small>
           </div>
 
-          <span v-if="user.user.site?.distance_km != null">
+          <span v-if="user.user.site?.distance_miles != null">
             <strong>{{ t('distance') }}: </strong>
-            {{ user.user.site?.distance_km }} {{ t('km') }}
+            {{ user.user.site?.distance_miles }} {{ t('km') }}
           </span>
 
           <span v-if="user.user.site?.nearest?.site?.site_name">
@@ -330,7 +330,7 @@ const t = (key) => (DICT[lang.value] && DICT[lang.value][key]) || (DICT.es[key] 
 
 const formatCOP = (v) => {
   try {
-    return new Intl.NumberFormat(lang.value === 'en' ? 'en-CO' : 'es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(v || 0))
+    return new Intl.NumberFormat(lang.value === 'en' ? 'en-CO' : 'es-CO', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(v || 0))
   } catch {
     return `COP ${Number(v || 0).toLocaleString()}`
   }
