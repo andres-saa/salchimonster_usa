@@ -50,12 +50,12 @@
             <small style="opacity:.8;">(code: {{ user.user.site.error.code }})</small>
           </div>
 
-          <span v-if="user.user.site?.distance_miles != null">
+          <span v-if="user.user.site?.distance_miles != null &&  user.user?.site?.nearest?.site?.site_id != 36">
             <strong>{{ t('distance') }}: </strong>
             {{ user.user.site?.distance_miles }} {{ t('km') }}
           </span>
 
-          <span v-if="user.user.site?.nearest?.site?.site_name">
+          <span v-if="user.user.site?.nearest?.site?.site_name &&  user.user?.site?.nearest?.site?.site_id != 36">
             <strong>{{ t('ships_from_site') }}: </strong>
             {{ user.user.site?.nearest?.site?.site_name }}
           </span>
