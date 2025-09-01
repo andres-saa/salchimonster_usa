@@ -2,11 +2,11 @@ import { defineStore } from "pinia";
 import { URI } from "../service/conection";
 
 
-export const useUserStore = defineStore('user-salchi-usa2', {
+export const useUserStore = defineStore('user-salchi-usa23', {
 
     persist: {
 
-                key: 'user-salchi2',
+                key: 'user-salchi23',
                 storage: localStorage,
                 paths:[
                     'user','lang'
@@ -23,7 +23,10 @@ export const useUserStore = defineStore('user-salchi-usa2', {
                 address:'',
                 phone_number:'',
                 was_reserva:false,
-                order_type:{} ,
+                order_type:    {
+                  "id": 1,
+                  "name": "Delivery"
+              },
                 phone_code:{ "code": "US", "name": "United States of America", "dialCode": "+1", "flag": "https://flagcdn.com/h20/us.png", "label": "+1", "dialDigits": "1", "flagEmoji": "🇺🇸", "_imgError": false }
 
             },
