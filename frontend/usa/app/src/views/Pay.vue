@@ -35,7 +35,7 @@
           </div>
 
           <Tag
-            v-if="user.user.site?.nearest"
+            v-if="user.user.site?.delivery_cost_cop"
             style="width: max-content;"
             :severity="user.user.site?.nearest?.in_coverage ? 'success' : 'danger'"
           >
