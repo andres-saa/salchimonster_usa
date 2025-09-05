@@ -125,7 +125,7 @@ function validateOrder(order: any): boolean {
   // 4) Nombre
   if (!order.user_data.user_name || order.user_data.user_name.trim() === "") {
     alertMissing("Error: Debe ingresar su nombre.");
-  }
+  } 
 
   // 5) Dirección
   //    Si es recoger (id 2), ya seteamos "recoger / pick up". Verificamos en otros casos.

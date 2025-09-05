@@ -3,6 +3,7 @@ import { onMounted , ref, onBeforeMount, onBeforeUnmount} from 'vue'
 
 // UI
 import Toast from 'primevue/toast'
+import Dialog from 'primevue/dialog' // usamos el diálogo para la cuenta regresiva
 
 // Componentes
 import VistaProducto from './components/Dialogs/VistaProducto.vue'
@@ -16,6 +17,7 @@ import { useSitesStore } from './store/site'
 import { fetchService } from './service/utils/fetchService'
 import { URI } from './service/conection'
 import Button from 'primevue/button'
+
 // ─────────────────────────────
 // State
 // ─────────────────────────────
@@ -23,6 +25,7 @@ const cart = usecartStore()
 const siteStore = useSitesStore()
 const reportes = useReportesStore()
 const route = useRoute()
+
 // ─────────────────────────────
 // Lifecycle
 // ─────────────────────────────
@@ -47,27 +50,24 @@ async function loadInitialData () {
     if (status) siteStore.status = status
     if (data?.categorias) cart.menu = data.categorias
   } catch (err) {
-    // Muestra un toast usando el store si ya lo tienes integrado,
-    // o deja el console.error por ahora.
     console.error('Error cargando datos iniciales:', err)
   } finally {
     reportes.loading.visible = false
   }
 }
 
-
-
+// ─────────────────────────────
+// Sticky on scroll (ya existente)
+// ─────────────────────────────
 const lastScrollY = ref(0)
 const sticky = ref(false)
 const handleScroll = () => {
   const currentScroll = window.scrollY
-
   if (currentScroll > lastScrollY.value) {
     sticky.value = true
   } else if (currentScroll < lastScrollY.value) {
     sticky.value = false
   }
-
   lastScrollY.value = currentScroll
 }
 
@@ -80,22 +80,111 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
 })
 
+// ─────────────────────────────
+// Idiomas (ya existente)
+// ─────────────────────────────
 const languages = [
   { name: 'es', label: 'Español', flag: 'https://flagcdn.com/w20/co.png' },
   { name: 'en', label: 'English',  flag: 'https://flagcdn.com/w20/us.png' }
 ]
 
+// ─────────────────────────────
+// WebSocket a tiendas-usa + cuenta regresiva
+// ─────────────────────────────
+const WS_URL = 'wss://sockets-service.salchimonster.com/ws/tiendas-usa'
+const wsRef = ref(null)
+const reconnectAttempts = ref(0)
+let reconnectTimeoutId = null
+
+const showReloadDialog = ref(false)
+const countdown = ref(3)
+const isStrongReload = ref(false)
+let countdownTimerId = null
+
+async function clearAppData () {
+  // Reset de stores si exponen $reset
+  try { cart.$reset?.() } catch {}
+  try { siteStore.$reset?.() } catch {}
+  try { reportes.$reset?.() } catch {}
+  // Limpieza de storage
+  try { localStorage.clear() } catch {}
+  try { sessionStorage.clear() } catch {}
+  // Cache API (PWA)
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys()
+      await Promise.all(keys.map(k => caches.delete(k)))
+    }
+  } catch {}
+}
+
+function startReloadCountdown (strong = false) {
+  if (showReloadDialog.value) return
+  isStrongReload.value = strong
+  showReloadDialog.value = true
+  countdown.value = 3
+
+  clearInterval(countdownTimerId)
+  countdownTimerId = setInterval(async () => {
+    countdown.value -= 1
+    if (countdown.value <= 0) {
+      clearInterval(countdownTimerId)
+      if (isStrongReload.value) {
+        await clearAppData()
+      }
+      window.location.reload()
+    }
+  }, 1000)
+}
+
+function connectWS () {
+  if (wsRef.value && (wsRef.value.readyState === WebSocket.OPEN || wsRef.value.readyState === WebSocket.CONNECTING)) {
+    return
+  }
+  const ws = new WebSocket(WS_URL)
+  wsRef.value = ws
+
+  ws.addEventListener('open', () => {
+    reconnectAttempts.value = 0
+  })
+
+  ws.addEventListener('message', async (event) => {
+    const msg = typeof event.data === 'string' ? event.data.trim().toLowerCase() : ''
+    if (msg === 'actualizar') {
+      startReloadCountdown(false)
+    } else if (msg === 'actualizar-fuerte') {
+      startReloadCountdown(true)
+    }
+  })
+
+  ws.addEventListener('close', () => {
+    const attempt = Math.min(6, reconnectAttempts.value + 1)
+    reconnectAttempts.value = attempt
+    const delay = Math.min(30000, 1000 * (2 ** attempt)) // hasta 30s
+    clearTimeout(reconnectTimeoutId)
+    reconnectTimeoutId = setTimeout(connectWS, delay)
+  })
+
+  ws.addEventListener('error', () => {
+    try { ws.close() } catch {}
+  })
+}
+
+onMounted(() => {
+  connectWS()
+})
+
+onBeforeUnmount(() => {
+  try {
+    clearTimeout(reconnectTimeoutId)
+    clearInterval(countdownTimerId)
+    wsRef.value?.close(1000, 'component unmounted')
+  } catch {}
+})
 </script>
 
 <template>
   <div>
-
-
-
-
-
-
-
     <!-- Overlay de carga -->
     <div
       v-if="reportes.loading.visible"
@@ -119,6 +208,28 @@ const languages = [
 
     <Toast />
 
+    <!-- Diálogo de cuenta regresiva (WS) -->
+    <Dialog
+      v-model:visible="showReloadDialog"
+      modal
+      :closable="false"
+      :draggable="false"
+      :breakpoints="{ '960px': '90vw', '640px': '95vw' }"
+      style="width: 420px; max-width: 95vw; z-index: 100001"
+      header="Actualización disponible"
+    >
+      <div class="reload-dialog">
+        <p class="reload-text">
+          Esta página se recargará automáticamente en
+          <b style="padding-left:.25rem">{{ countdown }}</b>
+        </p>
+        <div class="countdown-bubble">{{ countdown }}</div>
+        <small v-if="isStrongReload" class="hint">
+          Limpieza de datos y actualización…
+        </small>
+      </div>
+    </Dialog>
+
     <!-- Rutas -->
     <router-view />
 
@@ -129,9 +240,6 @@ const languages = [
     <!-- Si lo necesitas luego:
     <SiteDialogSonando />
     -->
-
-
-
   </div>
 </template>
 
@@ -171,9 +279,7 @@ const languages = [
   background-color: var(--p-primary-color);
   padding: 3rem;
   position: absolute;
-  /* border-radius: 50%; */
   animation: spin 1s linear infinite;
-  z-index: 999999999999;
   z-index: -1;
 }
 
@@ -205,7 +311,31 @@ const languages = [
 }
 
 /* Animación */
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Diálogo de recarga */
+.reload-dialog{
+  display: grid;
+  gap: .75rem;
+  place-items: center;
+  text-align: center;
+  padding: .5rem 0;
 }
+.reload-text{
+  font-size: 1rem;
+  margin: 0;
+}
+.countdown-bubble{
+  width: 90px;
+  height: 90px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 2.25rem;
+  font-weight: 900;
+  border: 3px solid var(--p-primary-color, #6d28d9);
+  animation: pop .8s ease-in-out infinite alternate;
+}
+.hint{ opacity: .8; }
+@keyframes pop { from { transform: scale(1); } to { transform: scale(1.06); } }
 </style>
