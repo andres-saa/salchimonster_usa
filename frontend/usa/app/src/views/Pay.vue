@@ -94,7 +94,7 @@
         >
           <div class="order-type-native" role="radiogroup" :aria-label="t('delivery_method')">
             <label
-              v-for="opt in computedOrderTypes.filter(t => [1,2,3].includes(t.id))"
+              v-for="opt in computedOrderTypes"
               :key="opt.id"
               style="border: none;outline: none;background-color: white;"
               class="order-type-pill"
@@ -576,11 +576,9 @@ onMounted(async () => {
   paymen_rules.value = await fetchService.get(`${URI}/site-payments`)
   sites.value = await fetchService.get(`${URI}/sites`)
   payment_method_options.value = await fetchService.get(`${URI}/payment_methods`)
-  order_types.value = await fetchService.get(`${URI}/get_all_order_types`)
+  order_types.value = await fetchService.get(`${URI}/site-order-types/`)
 
-  if (!user.user.order_type?.name) {
-    user.user.order_type = order_types?.value.find(o => o.id == 1)
-  }
+    user.user.order_type = computedOrderTypes.value?.[0]
 
   if (user?.user?.order_type?.id == 1) {
     siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
@@ -592,11 +590,23 @@ onMounted(async () => {
 watch(() => user.user.order_type, (new_val) => {
   if (new_val?.id == 2) {
     siteStore.location.neigborhood.delivery_price = 0
-  } else {
-    siteStore.location.site = user.user.site?.nearest?.site
-    siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+  } else if
+
+     (user.user.site?.nearest?.site){
+      siteStore.location.site = user.user.site?.nearest?.site
+      siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+    }
+
   }
+
+)
+
+
+watch( () => siteStore.location.site, () => {
+  user.user.order_type = computedOrderTypes.value?.[0]
+
 })
+
 
 watch(lang , (new_val) => {
   const prev = user.user.phone_code?.code
@@ -624,11 +634,7 @@ const save = () => {
 
 const computedOrderTypes = computed(() => {
   const currentSiteId = siteStore.location?.site?.site_id
-  if ([33,35,36].includes(currentSiteId)) {
-    return order_types.value.filter(option => option.id !== 3)
-  } else {
-    return order_types.value.filter(option => option.id !== 1)
-  }
+  return order_types.value?.[currentSiteId] || []
 })
 </script>
 
