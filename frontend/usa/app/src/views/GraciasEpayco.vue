@@ -847,7 +847,7 @@ Y la referencia del pago es *${epayco_data.value?.x_ref_payco}*
 const whatsappUrl = computed(() => {
   const baseUrl = "https://api.whatsapp.com/send";
   const urlParams = new URLSearchParams({
-    phone: "13477929350",
+    phone: "573102142549",
     text: text.value,
   });
   return `${baseUrl}?${urlParams.toString()}`;
@@ -856,7 +856,7 @@ const whatsappUrl = computed(() => {
 const whatsappUrl2 = computed(() => {
   const baseUrl = "https://api.whatsapp.com/send";
   const urlParams = new URLSearchParams({
-    phone: "13477929350",
+    phone: "573102142549",
     text: text2.value,
   });
   return `${baseUrl}?${urlParams.toString()}`;
@@ -865,7 +865,7 @@ const whatsappUrl2 = computed(() => {
 const whatsappUrl3 = computed(() => {
   const baseUrl = "https://api.whatsapp.com/send";
   const urlParams = new URLSearchParams({
-    phone: "13477929350",
+    phone: "573102142549",
     text: text3.value,
   });
   return `${baseUrl}?${urlParams.toString()}`;

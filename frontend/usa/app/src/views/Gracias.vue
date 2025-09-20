@@ -133,8 +133,8 @@ onMounted(() => {
 
 const whatsappUrl = computed(() => {
     const baseUrl = 'https://api.whatsapp.com/send';
-    let phone = 13477929350
-    store.last_order.split('-')[0] == 'NEW'?  phone = 13477929350 :  phone = 13477929350
+    let phone = 573102142549
+    store.last_order.split('-')[0] == 'NEW'?  phone = 573102142549 :  phone = 573102142549
     const urlParams = new URLSearchParams({
         phone: phone,
         text: text.value
@@ -147,8 +147,8 @@ const whatsappUrl = computed(() => {
 
 const whatsappUrlConfirmar = computed(() => {
     const baseUrl = 'https://api.whatsapp.com/send';
-    let phone = 13477929350
-    store.last_order.split('-')[0] == 'NEW'?  phone = 13477929350 :  phone = 13477929350
+    let phone = 573102142549
+    store.last_order.split('-')[0] == 'NEW'?  phone = 573102142549 :  phone = 573102142549
     const urlParams = new URLSearchParams({
         phone: phone,
         text: textConfirmar.value
