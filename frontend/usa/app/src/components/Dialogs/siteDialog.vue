@@ -134,14 +134,14 @@ watch(
     // obtén el status normalmente
     const status = await fetchService.get(`${URI}/site/${newval.site_id}/status`);
 
-    if (newval.site_id == 37) {
-      // 🔹 revertir el cambio en el store ANTES de navegar
-      store.location.site = oldval;
+    // if (newval.site_id == 37) {
+    //   // 🔹 revertir el cambio en el store ANTES de navegar
+    //   store.location.site = oldval;
 
-      // 🔹 navegar a la URL externa
-      window.location.href = 'https://ordering.chownow.com/order/42376/locations/64019';
-      return; // salimos para no sobreescribir el store.status
-    }
+    //   // 🔹 navegar a la URL externa
+    //   window.location.href = 'https://ordering.chownow.com/order/42376/locations/64019';
+    //   return; // salimos para no sobreescribir el store.status
+    // }
 
     if (status) {
       store.status = status;
