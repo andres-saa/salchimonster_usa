@@ -12,7 +12,7 @@
       <!-- Nombre -->
       <div class="form-row">
 
-        
+
         <h4>Nombre</h4>
         <InputText v-model.trim="user.user_name" placeholder="Nombre completo" required />
       </div>
@@ -66,22 +66,22 @@
     <div v-else style="display: flex;align-items: center;gap: 0; justify-content: center;flex-direction: column;background-size: cover;width: 100%;;position: relative; " >
 
       <!-- <h1 style="color: white;font-size: 4rem;">Registrate y ganate un premio</h1> -->
- 
+
 
       <img style="margin:auto; max-width: 80vw; height: 300px;object-fit: cover;" src="https://cdn.pixabay.com/animation/2023/11/29/03/39/03-39-03-19_512.gif" alt="">
             <!-- <h1 style="color: white;; top: 2rem;">Registrate y Ganate un premio</h1> -->
-      
+
       <Button label="Ingresar datos" style="height:15rem;font-size: 2rem;max-width: 15rem; aspect-ratio: 1 / 1;"
         @click="show = true"></Button>
 
     </div>
       </div>
-    
+
 
 
     </div>
 
-        
+
 
 
   </div>

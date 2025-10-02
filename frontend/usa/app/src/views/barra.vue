@@ -5,7 +5,7 @@
     route.path == '/' || route.path == '/kids'
 
   " class="fixed-cart-bar background" :style="route.path != '/kids'? '  background: linear-gradient(to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));': ''">
-    <div v-if="store.cart.length > 0 && sitestore.location.site.site_id !== 37" @click="enviarAlCarro" :class="['cart-bar', { hidden: !showElement }]">
+    <div v-if="store.cart.length > 0 " @click="enviarAlCarro" :class="['cart-bar', { hidden: !showElement }]">
 
 
       <button class="cart-button">
