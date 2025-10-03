@@ -125,7 +125,7 @@ function validateOrder(order: any): boolean {
   // 4) Nombre
   if (!order.user_data.user_name || order.user_data.user_name.trim() === "") {
     alertMissing("Error: Debe ingresar su nombre.");
-  } 
+  }
 
   // 5) Dirección
   //    Si es recoger (id 2), ya seteamos "recoger / pick up". Verificamos en otros casos.
@@ -206,8 +206,9 @@ export const orderService = {
 
         // Redirección condicional: mantiene tu lógica original
         if (order.payment_method_id !== 9) {
-          router.push("/gracias");
+          router.push(`/gracias?order_id=${response.data}`);
         }
+
 
         return response.data;
       } else {
