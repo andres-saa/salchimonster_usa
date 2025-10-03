@@ -139,7 +139,7 @@
           <InputText id="username" :placeholder="t('name')" v-model="user.user.name" />
         </div>
 
-        <template v-if="!user.user.order_type || user.user.order_type.id !== 2">
+        <!-- <template v-if="!user.user.order_type || user.user.order_type.id == 2">
           <span>Ubicación</span>
           <div class="form-group">
             <InputText
@@ -150,12 +150,12 @@
               readonly
             />
           </div>
-        </template>
+        </template> -->
 
         <template v-if="!user.user.order_type || user.user.order_type.id !== 2">
           <span>{{ t('address') }}</span>
           <div class="form-group">
-            <InputText v-model="user.user.address" />
+            <InputText @click="see_sites = true" v-model="user.user.address" />
           </div>
         </template>
 
@@ -163,7 +163,7 @@
           <span>{{ t('site_recoger') }}</span>
           <div class="form-group" style="display: flex; flex-direction: column; justify-content: start; align-items: start;">
             <InputText
-              @click="siteStore.setVisible('currentSiteSites', true)"
+            @click="siteStore.setVisible('currentSite', true)"
               :modelValue="siteStore?.location?.site?.site_name"
               id="neighborhood"
               placeholder="Ubicación"
@@ -444,7 +444,7 @@ const search = async (event) => {
   })
 
   try {
-    const url = `${uri_api_google}/co/places/autocomplete?${params.toString()}`
+    const url = `${uri_api_google}/places/autocomplete?${params.toString()}`
     const res = await fetchService.get(url, false)
     const predictions = Array.isArray(res) ? res : Array.isArray(res?.predictions) ? res.predictions : []
     dir_options.value = predictions.filter(p => p?.description && p?.place_id)
@@ -467,7 +467,7 @@ const onAddressSelect = async (e) => {
       session_token: sessionToken.value || '',
       language: lang.value
     })
-    const url = `${uri_api_google}/co/places/coverage-details?${params.toString()}`
+    const url = `${uri_api_google}/places/coverage-details?${params.toString()}`
     const details = await fetchService.get(url)
 
     user.user.site = details || {}
@@ -605,6 +605,9 @@ const save = () => {
   see_sites.value = false
   siteStore.location.site = user.user.site?.nearest?.site
   siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+    if (user.user?.site?.description) {
+    user.user.address = user.user.site.description
+ }
   ensureValidOrderTypeForCurrentSite()
 }
 
