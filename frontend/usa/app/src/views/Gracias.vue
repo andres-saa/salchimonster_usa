@@ -277,7 +277,7 @@ const subtotal = computed(() => pagocon.value + descuento.value - envio.value);
 const phoneByOrder = computed(() => {
   const id = order.value?.order_id || "";
   const prefix = id.split("-")?.[0] || "";
-  return ["NEW", "NEK", "FIL", "NYK"].includes(prefix) ? "573053447255" : "573053447255";
+  return ["UNI", "NEK", "FIL", "NYK"].includes(prefix) ? "573053447255" : "573053447255";
 });
 
 // Textos de WhatsApp generados desde la orden
