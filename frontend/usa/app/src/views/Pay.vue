@@ -1,14 +1,15 @@
 <template>
   <div class="finalizar-compra-container">
+    <!-- Selector de sede / cobertura -->
     <Dialog
       :header="t('site_selector')"
       modal
       :closable="false"
       v-model:visible="see_sites"
-      style="width: 100%;max-width: 30rem;margin: .5rem ;"
+      style="width: 100%; max-width: 30rem; margin: .5rem;"
     >
       <template v-if="!user.user.order_type || user.user.order_type.id !== 2">
-        <div style="display: flex;flex-direction: column;gap: 1rem;">
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
           <div class="form-group">
             <!-- Autocomplete de direcciones -->
             <AutoComplete
@@ -35,7 +36,7 @@
           </div>
 
           <Tag
-            v-if="user.user.site?.delivery_cost_cop"
+            v-if="user.user.site?.delivery_cost_cop != null"
             style="width: max-content;"
             :severity="user.user.site?.nearest?.in_coverage ? 'success' : 'danger'"
           >
@@ -50,12 +51,12 @@
             <small style="opacity:.8;">(code: {{ user.user.site.error.code }})</small>
           </div>
 
-          <span v-if="user.user.site?.distance_miles != null &&  user.user?.site?.nearest?.site?.site_id != 36">
+          <span v-if="user.user.site?.distance_miles != null && user?.user?.site?.nearest?.site?.site_id != 36">
             <strong>{{ t('distance') }}: </strong>
             {{ user.user.site?.distance_miles }} {{ t('km') }}
           </span>
 
-          <span v-if="user.user.site?.nearest?.site?.site_name &&  user.user?.site?.nearest?.site?.site_id != 36">
+          <span v-if="user.user.site?.nearest?.site?.site_name && user?.user?.site?.nearest?.site?.site_id != 36">
             <strong>{{ t('ships_from_site') }}: </strong>
             {{ user.user.site?.nearest?.site?.site_name }}
           </span>
@@ -67,15 +68,15 @@
       </template>
 
       <template #footer>
-        <div style="display: flex;gap: 1rem;">
+        <div style="display: flex; gap: 1rem;">
           <Button
-            @click="() => {see_sites = false ; user.user.site = {}; addressQuery=''}"
+            @click="() => { see_sites = false; user.user.site = {}; addressQuery = '' }"
             :label="t('cancel')"
             severity="danger"
             text
           />
           <Button
-            style="background-color: black;border: none;"
+            style="background-color: black; border: none;"
             :label="t('save')"
             @click="save"
             :disabled="!user.user.site?.nearest?.in_coverage"
@@ -88,15 +89,16 @@
 
     <div class="form-grid">
       <div class="form-column">
+        <!-- Selector de Order Types calculados por sede -->
         <div
-          style="position: sticky;background-color: #f8f4fc;transition: all .3s ease;z-index: 99999999;margin-bottom: 0rem; padding-top: .5rem;"
-          :style="!sticky? '  top: 3.5rem;' : 'top: 0;'"
+          style="position: sticky; background-color: #f8f4fc; transition: all .3s ease; z-index: 5; margin-bottom: 0rem; padding-top: .5rem;"
+          :style="!sticky ? 'top: 3.5rem;' : 'top: 0;'"
         >
           <div class="order-type-native" role="radiogroup" :aria-label="t('delivery_method')">
             <label
               v-for="opt in computedOrderTypes"
               :key="opt.id"
-              style="border: none;outline: none;background-color: white;"
+              style="border: none; outline: none; background-color: white;"
               class="order-type-pill"
               :class="{ 'is-active': orderTypeIdStr === String(opt.id) }"
             >
@@ -108,10 +110,29 @@
                 :value="String(opt.id)"
                 v-model="orderTypeIdStr"
               />
-              <span>{{ lang === 'en' ? (opt.english_name || opt.name) : (opt.name || opt.english_name) }} </span>
+              <span>{{ opt.name }}</span>
             </label>
           </div>
         </div>
+
+        <div style="width: 100%; display: flex; justify-content: space-between; height: min-content;">
+          <span>{{ t('code') }} <i class="pi pi-tag"></i></span>
+          <Checkbox v-model="have_discount" binary style=""></Checkbox>
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 1rem;" v-if="have_discount">
+          <InputText :placeholder="t('code_placeholder')" v-model="temp_discount" />
+          <Button v-if="user.user.name" severity="danger" style="min-width: max-content;" label="Validar"></Button>
+          <Button v-if="user.user.name" severity="danger" style="min-width: max-content;" label="Eliminar"></Button>
+          <Button
+            :disabled="!temp_discount"
+            @click="validateDiscoun(temp_discount)"
+            v-else
+            style="min-width: max-content; background-color: black; border: none;"
+            label="Aplicar"
+          />
+        </div>
+        <Tag v-if="have_discount" severity="success">Codigo válido</Tag>
 
         <span>{{ t('name') }}</span>
         <div class="form-group">
@@ -119,34 +140,44 @@
         </div>
 
         <template v-if="!user.user.order_type || user.user.order_type.id !== 2">
-          <span>{{ t('address') }}</span>
+          <span>Ubicación</span>
           <div class="form-group">
             <InputText
-              @click="() => see_sites = true"
-              :value="user.user.site?.formatted_address || user.user.site?.description"
+              @click="siteStore.setVisible('currentSite', true)"
+              :modelValue="siteStore?.location?.site?.site_name"
+              id="neighborhood"
+              placeholder="Ubicación"
               readonly
             />
+          </div>
+        </template>
+
+        <template v-if="!user.user.order_type || user.user.order_type.id !== 2">
+          <span>{{ t('address') }}</span>
+          <div class="form-group">
+            <InputText v-model="user.user.address" />
           </div>
         </template>
 
         <template v-if="!user.user.order_type || user.user.order_type.id == 2">
           <span>{{ t('site_recoger') }}</span>
-          <div class="form-group" style="display: flex;flex-direction: column;justify-content: start;align-items: start;">
+          <div class="form-group" style="display: flex; flex-direction: column; justify-content: start; align-items: start;">
             <InputText
-              @click="siteStore.setVisible && siteStore.setVisible('currentSite', true)"
+              @click="siteStore.setVisible('currentSiteSites', true)"
               :modelValue="siteStore?.location?.site?.site_name"
               id="neighborhood"
-              placeholder="Ubicacion"
+              placeholder="Ubicación"
               readonly
             />
-            <Tag v-if="siteStore?.location?.site?.site_address"> {{ siteStore?.location?.site?.site_address }}</Tag>
+            <Tag> {{ siteStore?.location?.site?.site_address }}</Tag>
           </div>
         </template>
 
         <span>{{ t('phone') }}</span>
         <div class="form-group phone-row" style="display: flex;">
-          <!-- País -->
-          <AutoComplete style="width: min-content;"
+          <!-- País (AutoComplete con bandera + código) -->
+          <AutoComplete
+            style="width: min-content;"
             v-model="user.user.phone_code"
             :suggestions="countrySuggestions"
             optionLabel="dialCode"
@@ -156,13 +187,14 @@
             class="cc-autocomplete"
           >
             <template #option="slotProps">
-              <div class="flex items-center" style="display: flex;gap: 1rem;">
+              <div class="flex items-center" style="display: flex; gap: 1rem;">
                 <img :alt="slotProps.option.flag" :src="slotProps.option.flag" />
-                <div>{{ slotProps.option.name }}  {{ slotProps.option.dialCode }} </div>
+                <div>{{ slotProps.option.name }} {{ slotProps.option.dialCode }}</div>
               </div>
             </template>
+
             <template #selectedItem="slotProps">
-              <div class="flex items-center gap-2" style="display: flex;gap: 1rem;">
+              <div class="flex items-center gap-2" style="display: flex; gap: 1rem;">
                 <img :alt="slotProps.value.flag" :src="slotProps.value.flag" style="width: 20px; height: 14px;" />
                 <span>{{ slotProps.value.dialCode }}</span>
               </div>
@@ -171,7 +203,8 @@
 
           <!-- Número -->
           <div class="phone-number" style="width: 100%;">
-            <InputText :disabled="!user.user.phone_code?.dialCode"
+            <InputText
+              :disabled="!user.user.phone_code?.dialCode"
               v-model="user.user.phone_number"
               id="phone_number"
               :placeholder="t('phone')"
@@ -185,11 +218,7 @@
 
         <span>{{ t('email') }}</span>
         <div class="form-group">
-          <InputText
-            v-model="user.user.email"
-            id="email"
-            :placeholder="t('email')"
-          />
+          <InputText v-model="user.user.email" id="email" :placeholder="t('email')" />
         </div>
 
         <template v-if="user?.user?.order_type && user?.user?.order_type?.id === 2 && [33,35,36].includes(siteStore.location?.site?.site_id)">
@@ -201,7 +230,6 @@
 
         <span>{{ t('payment_method') }}</span>
         <div class="form-group">
-          <!-- Opciones de pago: vienen del doc ARRAY por sede y order_type, con labels localizados -->
           <Select
             style="width: 100%;"
             v-model="user.user.payment_method_option"
@@ -213,20 +241,19 @@
         </div>
 
         <span>{{ t('notes') }}</span>
-        <Textarea
-          v-model="store.cart.order_notes"
-          class="order-notes"
-          :placeholder="t('additional_notes')"
-        />
+        <Textarea v-model="store.cart.order_notes" class="order-notes" :placeholder="t('additional_notes')" />
+        <template>
+          <Textarea v-model="store.cart.order_notes" class="order-notes" :placeholder="t('notes')" />
+        </template>
       </div>
 
-      <resumen class="resumen-column" style="margin:0 .3rem;padding-top: .5rem;"></resumen>
+      <resumen class="resumen-column" style="margin: 0 .3rem; padding-top: .5rem;"></resumen>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed ,onBeforeUnmount} from 'vue'
+import { ref, onMounted, watch, computed, onBeforeUnmount } from 'vue'
 import resumen from './resumen.vue'
 import { usecartStore } from '@/store/shoping_cart'
 import { useSitesStore } from '@/store/site'
@@ -235,21 +262,23 @@ import Textarea from 'primevue/textarea'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
+import AutoComplete from 'primevue/autocomplete'
 import { fetchService } from '@/service/utils/fetchService'
 import { URI } from '@/service/conection'
-import AutoComplete from 'primevue/autocomplete'
 import { buildCountryOptions } from '@/service/utils/countries'
 import { parsePhoneNumberFromString } from 'libphonenumber-js/min'
 
-const autocompleteError = ref(null)
-
+/* ================= i18n ================= */
 const user = useUserStore()
 const siteStore = useSitesStore()
 const store = usecartStore()
 
-/* ====== i18n ====== */
+const have_discount = ref(false)
+const temp_discount = ref(null)
+
 const lang = computed(() => {
   const v = (user?.lang?.name || 'es').toString().toLowerCase()
   return v === 'en' ? 'en' : 'es'
@@ -271,6 +300,7 @@ const DICT = {
     save: 'Guardar',
     finalize_purchase: 'Finalizar compra',
     name: 'Nombre',
+    code: '¿Tienes un cupón de descuento?',
     address: 'Dirección',
     phone: 'Teléfono',
     email: 'Correo electrónico',
@@ -280,6 +310,7 @@ const DICT = {
     additional_notes: 'Notas adicionales',
     delivery_method: 'Método de entrega',
     site_recoger: 'Sede donde vas a recoger',
+    code_placeholder: 'Ingresa tu código',
     search_country_or_code: 'Buscar país o código (+57, 57, US, +1 929)...'
   },
   en: {
@@ -290,6 +321,8 @@ const DICT = {
     coverage_error: 'Coverage error',
     distance: 'Distance',
     miles: 'Miles',
+    code: 'Do you have a discount coupon?',
+    code_placeholder: 'Enter your code',
     km: 'km',
     ships_from_site: 'Ships from',
     delivery_price: 'Delivery price',
@@ -309,20 +342,17 @@ const DICT = {
     search_country_or_code: 'Search country or code (+57, 57, US, +1 929)...'
   }
 }
-const t = (key) => (DICT[lang.value] && DICT[lang.value][key]) || (DICT.es[key] || key)
+const t = (key) => (DICT[lang.value]?.[key]) ?? DICT.es[key] ?? key
 
-/* ====== Dinero ====== */
 const formatCOP = (v) => {
   try {
-    return new Intl.NumberFormat(lang.value === 'en' ? 'en-CO' : 'es-CO', {
-      style: 'currency', currency: 'COP', maximumFractionDigits: 0
-    }).format(Number(v || 0))
+    return new Intl.NumberFormat(lang.value === 'en' ? 'en-CO' : 'es-CO', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(v || 0))
   } catch {
     return `COP ${Number(v || 0).toLocaleString()}`
   }
 }
 
-/* ====== Sticky ====== */
+/* =============== Sticky header =============== */
 const lastScrollY = ref(0)
 const sticky = ref(false)
 const handleScroll = () => {
@@ -339,53 +369,27 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
 })
 
-/* ====== DOC MAESTRO (ARRAY) ======
- * serverDocRaw = [
- *   { site_id, order_types: [ { id, name, english_name, methods: [ {id, name, english_name, ...}, ... ] } ] }
- * ]
- */
-const serverDocRaw = ref([])
+/* =============== Catálogos / reglas =============== */
+const order_types_catalog = ref([])                 // catálogo global (fallback de nombres)
+const payment_method_catalog = ref([])              // catálogo global (fallback de métodos)
+const sitePaymentsComplete = ref([])                // ← fuente principal por sede y order_type
+const sites = ref([])                               // sedes (para validar site_id si hace falta)
 
-/** Fallback si el doc viene vacío (2 = Recoger, 3 = Domicilio) */
+/* Fallback cuando el doc viene vacío */
 const DEFAULT_ORDER_TYPES = Object.freeze([
-  { id: 2, name: 'Recoger',   english_name: 'Pickup',   methods: [] },
-  { id: 3, name: 'Domicilio', english_name: 'Delivery', methods: [] },
+  { id: 3, name: 'Enviar a domicilio', english_name: 'Delivery' },
+  { id: 2, name: 'Recoger', english_name: 'Pickup' },
 ])
 
-/** Garantiza entrada para la sede con order_types iniciales si no hay datos */
-const ensureServerEntry = (site_id) => {
-  let entry = serverDocRaw.value.find(s => String(s.site_id) === String(site_id))
-  if (!entry) {
-    entry = {
-      site_id,
-      order_types: DEFAULT_ORDER_TYPES.map(ot => ({
-        id: ot.id, name: ot.name, english_name: ot.english_name, methods: []
-      }))
-    }
-    serverDocRaw.value.push(entry)
-  } else if (!Array.isArray(entry.order_types) || entry.order_types.length === 0) {
-    entry.order_types = DEFAULT_ORDER_TYPES.map(ot => ({
-      id: ot.id, name: ot.name, english_name: ot.english_name, methods: []
-    }))
-  }
-  return entry
-}
-
-/* Países/telefonía */
+/* =============== Países / teléfono =============== */
 const countries = ref([])
 const countrySuggestions = ref([])
-
 const norm = (s) => (s || '').toString().trim().toLowerCase()
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '')
 const toFlagEmoji = (iso2) => {
   if (!iso2) return '🏳️'
-  return iso2
-    .toUpperCase()
-    .split('')
-    .map(c => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0)))
-    .join('')
+  return iso2.toUpperCase().split('').map(c => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0))).join('')
 }
-
 const countryComplete = (e) => {
   const q = (e?.query ?? '')
   const qNorm = norm(q)
@@ -395,42 +399,30 @@ const countryComplete = (e) => {
     countrySuggestions.value = countries.value.slice(0, 25)
     return
   }
-
   let list = countries.value.filter(c => {
     const name = norm(c.name)
     const iso  = norm(c.code)
     const dialDigits = c.dialDigits
-
     if (name.includes(qNorm) || iso.includes(qNorm)) return true
     if (!qDigits) return false
     if (dialDigits.startsWith(qDigits) || qDigits.startsWith(dialDigits)) return true
     return false
   })
-
-  countrySuggestions.value = list
-    .filter(o => o && typeof o === 'object' && typeof o.name === 'string')
-    .slice(0, 50)
+  countrySuggestions.value = list.filter(o => o && typeof o === 'object' && typeof o.name === 'string').slice(0, 50)
 }
 
-/* ====== Tipo de orden (usa serverDocRaw ARRAY) ====== */
-const orderTypeIdStr = computed({
-  get: () => (user.user.order_type?.id != null ? String(user.user.order_type.id) : null),
-  set: (idStr) => {
-    const id = Number(idStr)
-    const opt = computedOrderTypes.value.find(o => Number(o.id) === id) || null
-    user.user.order_type = opt
-  }
-})
-
+/* =============== Dirección (autocomplete / coverage) =============== */
 const see_sites = ref(false)
-const uri_api_google =  'https://api.stripe.salchimonster.com'
-
-/* ====== Autocomplete direcciones ====== */
+const uri_api_google = 'https://api.stripe.salchimonster.com'
 const addressQuery = ref('')
 const dir_options = ref([])
 const sessionToken = ref(null)
-const maxSuggestions = 5
+const autocompleteError = ref(null)
 
+const regionPref = computed(() => {
+  return (user.phone_code?.code || siteStore.location?.site?.country_code || 'CO').toLowerCase()
+})
+const maxSuggestions = 5
 const newSession = () => {
   sessionToken.value =
     typeof crypto !== 'undefined' && crypto.randomUUID
@@ -456,15 +448,9 @@ const search = async (event) => {
   })
 
   try {
-    const url = `${uri_api_google}/places/autocomplete?${params.toString()}`
+    const url = `${uri_api_google}/co/places/autocomplete?${params.toString()}`
     const res = await fetchService.get(url, false)
-
-    const predictions = Array.isArray(res)
-      ? res
-      : Array.isArray(res?.predictions)
-        ? res.predictions
-        : []
-
+    const predictions = Array.isArray(res) ? res : Array.isArray(res?.predictions) ? res.predictions : []
     dir_options.value = predictions.filter(p => p?.description && p?.place_id)
     autocompleteError.value = (res && !Array.isArray(res) && res.error) ? res.error : null
   } catch (err) {
@@ -477,7 +463,6 @@ const search = async (event) => {
 const onAddressSelect = async (e) => {
   const item = e?.value
   if (!item?.place_id) return
-
   autocompleteError.value = null
   user.user.place_id = item.place_id
   try {
@@ -486,7 +471,7 @@ const onAddressSelect = async (e) => {
       session_token: sessionToken.value || '',
       language: lang.value
     })
-    const url = `${uri_api_google}/places/coverage-details?${params.toString()}`
+    const url = `${uri_api_google}/co/places/coverage-details?${params.toString()}`
     const details = await fetchService.get(url)
 
     user.user.site = details || {}
@@ -494,16 +479,14 @@ const onAddressSelect = async (e) => {
     user.user.lat = details?.lat || null
     user.user.lng = details?.lng || null
     store.address_details = details
-    addressQuery.value = user.user.site.description  || item.description
+    addressQuery.value = user.user.site.description || item.description
     autocompleteError.value = details?.error || null
 
-    if (details?.delivery_cost_cop != null) {
-      siteStore.location.neigborhood = siteStore.location.neigborhood || {}
-      siteStore.location.neigborhood.delivery_price = details.delivery_cost_cop
-    } else {
-      siteStore.location.neigborhood = siteStore.location.neigborhood || {}
-      siteStore.location.neigborhood.delivery_price = null
-    }
+    if (details?.delivery_cost_cop != null) siteStore.location.neigborhood.delivery_price = details.delivery_cost_cop
+    else siteStore.location.neigborhood.delivery_price = null
+
+    // Al elegir dirección, si cambia la sede, refrescamos order types/payment options
+    ensureValidOrderTypeForCurrentSite()
   } catch (err) {
     console.error('Coverage Details error:', err)
     user.user.address = item.description
@@ -513,9 +496,8 @@ const onAddressSelect = async (e) => {
   }
 }
 
-/* ====== Teléfono ====== */
+/* =============== Teléfono: validación y formateo =============== */
 const phoneError = ref(null)
-
 const formatPhoneOnBlur = () => {
   const countryIso = user.user.phone_code?.code || undefined
   const phone = parsePhoneNumberFromString(user.user.phone_number || '', countryIso)
@@ -523,19 +505,15 @@ const formatPhoneOnBlur = () => {
     user.user.phone_number = phone.formatNational()
   }
 }
-
 watch([() => user.user.phone_number, () => user.user.phone_code], ([num, country]) => {
   phoneError.value = null
-
   const raw = (num || '').toString().trim()
   if (!raw) {
     user.user.phone_e164 = null
     return
   }
-
   const countryIso = country?.code || undefined
   const phone = parsePhoneNumberFromString(raw, countryIso)
-
   if (phone && phone.isValid()) {
     user.user.phone_e164 = phone.number
   } else {
@@ -546,87 +524,113 @@ watch([() => user.user.phone_number, () => user.user.phone_code], ([num, country
   }
 }, { immediate: true })
 
-/* ====== Sitios ====== */
-const sites = ref([])
-
-/* ====== Computados con serverDocRaw (ARRAY) ====== */
-const computedOrderTypes = computed(() => {
-  const currentSiteId = siteStore.location?.site?.site_id
-  if (currentSiteId == null) return []
-  const entry = serverDocRaw.value.find(s => String(s.site_id) === String(currentSiteId))
-  const list = (entry?.order_types?.length ? entry.order_types : DEFAULT_ORDER_TYPES)
-  return list.map(ot => ({
-    id: Number(ot.id),
-    name: ot.name ?? (ot.english_name || `OT ${ot.id}`),
-    english_name: ot.english_name ?? (ot.name || `OT ${ot.id}`)
-  }))
-})
-
-const computedPaymentOptions = computed(() => {
-  const siteId = siteStore.location?.site?.site_id
-  const otId = user.user.order_type?.id
-  if (siteId == null || otId == null) return []
-  const entry = serverDocRaw.value.find(s => String(s.site_id) === String(siteId))
-  const orderTypes = entry?.order_types?.length ? entry.order_types : DEFAULT_ORDER_TYPES
-  const found = orderTypes.find(ot => Number(ot.id) === Number(otId))
-  const list = Array.isArray(found?.methods) ? found.methods : []
-  return list.map(m => ({
-    ...m,
-    name: m?.name ?? m?.english_name ?? '—',
-    english_name: m?.english_name ?? m?.name ?? '—'
-  }))
-})
-
-/* ====== Guardar selección de sede ====== */
-const save = () => {
-  see_sites.value = false
-  if (user?.user?.site?.nearest?.site) {
-    siteStore.location.site = user.user.site.nearest.site
+/* =============== Control tipo de orden (por sede) =============== */
+const orderTypeIdStr = computed({
+  get: () => (user.user.order_type?.id != null ? String(user.user.order_type.id) : null),
+  set: (idStr) => {
+    const id = Number(idStr)
+    const opt = computedOrderTypes.value.find(o => o.id === id) || null
+    user.user.order_type = opt
   }
-  siteStore.location.neigborhood = siteStore.location.neigborhood || {}
-  siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+})
+
+/* Utilidades para leer el doc por sede */
+const getEntryForSite = (site_id) => {
+  const idStr = String(site_id ?? '')
+  if (!idStr) return null
+  const entry = sitePaymentsComplete.value.find(s => String(s.site_id) === idStr)
+  return entry || null
 }
 
-/* ====== Reacciones ====== */
-watch(() => user.user.order_type, (new_val) => {
-  if (new_val?.id == 2) {
-    // Recoger
-    siteStore.location.neigborhood = siteStore.location.neigborhood || {}
-    siteStore.location.neigborhood.delivery_price = 0
-  } else if (user.user.site?.nearest?.site) {
-    siteStore.location.site = user.user.site?.nearest?.site
-    siteStore.location.neigborhood = siteStore.location.neigborhood || {}
-    siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+const computedOrderTypes = computed(() => {
+  const currentSiteId = siteStore.location?.site?.site_id
+  const entry = getEntryForSite(currentSiteId)
+  if (entry && Array.isArray(entry.order_types) && entry.order_types.length) {
+    // Normalizamos ids/nombres y solo mostramos 1,2,3 si existieran
+    const list = entry.order_types
+      .map(ot => ({ id: Number(ot.id), name: ot.name ?? (order_types_catalog.value.find(o => o.id === Number(ot.id))?.name ?? `OT ${ot.id}`), english_name: ot.english_name ?? null }))
+      .filter(ot => [1,2,3].includes(ot.id))
+    // Fallback si por alguna razón la lista queda vacía
+    if (list.length) return list
   }
+  // Fallback global
+  return DEFAULT_ORDER_TYPES
 })
 
-watch(() => siteStore.location.site, () => {
-  user.user.order_type = computedOrderTypes.value?.[0] || null
+/* Opciones de pago por site + order_type (con fallback) */
+const computedPaymentOptions = computed(() => {
+  const currentSiteId = siteStore.location?.site?.site_id
+  const currentOtId = user.user.order_type?.id
+  const entry = getEntryForSite(currentSiteId)
+
+  let methods = []
+
+  if (entry && Array.isArray(entry.order_types)) {
+    const ot = entry.order_types.find(o => Number(o.id) === Number(currentOtId))
+    if (ot && Array.isArray(ot.methods) && ot.methods.length) {
+      // El doc ya trae objetos completos (id, name, english_name, icon, etc.)
+      methods = ot.methods.map(m => ({
+        id: m.id,
+        name: m.name ?? (payment_method_catalog.value.find(pm => pm.id === m.id)?.name ?? `M ${m.id}`),
+        english_name: m.english_name ?? (payment_method_catalog.value.find(pm => pm.id === m.id)?.english_name ?? null),
+        icon: m.icon ?? m.icon_class ?? null,
+        code: m.code ?? m.slug ?? null,
+      }))
+    }
+  }
+
+  // Filtro de ejemplo legacy: si es Delivery (3), quitar id 8 (si aplica)
+  if (user?.user?.order_type?.id === 3) {
+    methods = methods.filter(m => m.id !== 8)
+  }
+
+  // Fallback al catálogo global si quedó vacío
+  if (!methods.length && Array.isArray(payment_method_catalog.value) && payment_method_catalog.value.length) {
+    methods = payment_method_catalog.value
+  }
+  return methods
 })
 
-watch(lang , (new_val) => {
-  const prev = user.user.phone_code?.code
-  countries.value = buildCountryOptions(new_val).map(c => ({
-    ...c,
-    dialDigits: (c.dialCode || '').replace(/\D+/g, ''),
-    flag: `https://flagcdn.com/h20/${c.code.toLowerCase()}.png`,
-    flagEmoji: toFlagEmoji(c.code),
-    _imgError: false
-  }))
-  countrySuggestions.value = countries.value.slice(0, 25)
-  user.user.phone_code =
-    countries.value.find(c => c.code === prev) ||
-    countries.value.find(c => c.code === (new_val === 'en' ? 'US' : 'CO')) ||
-    null
-})
+/* Garantiza que el order_type seleccionado sea válido para la sede actual */
+const ensureValidOrderTypeForCurrentSite = () => {
+  const list = computedOrderTypes.value
+  const selectedId = user.user.order_type?.id
+  const stillValid = list.some(o => o.id === Number(selectedId))
+  if (!stillValid) {
+    // preferimos Delivery (3) si existe; si no, el primero disponible
+    const prefer = list.find(o => o.id === 3) || list[0] || null
+    if (prefer) user.user.order_type = prefer
+    else user.user.order_type = null
+  }
+}
 
-watch(() => user.user.order_type, () => {
-  user.user.placa = null
-})
+/* =============== Guardado del modal de sedes =============== */
+const save = () => {
+  see_sites.value = false
+  siteStore.location.site = user.user.site?.nearest?.site
+  siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+  ensureValidOrderTypeForCurrentSite()
+}
 
-/* ====== Carga inicial (ARRAY con fallback) ====== */
+/* =============== Descuentos (validación básica) =============== */
+const validateDiscoun = async (code) => {
+  if (!siteStore.location.site) {
+    alert('Por favor selecciona una sede para validar tu descuento')
+    return
+  }
+  const discount = await fetchService.get(`${URI}/discount/get-discount-by-code/${code}`)
+  if (discount) {
+    if (!discount.sites.some(s => s.site_id == siteStore.location.site.site_id)) {
+      const site_names = discount.sites.map(s => s.site_name).join(', ')
+      alert(`El código solo es válido para las siguientes sedes: ${site_names}`)
+      return
+    }
+  }
+}
+
+/* ================== Montaje ================== */
 onMounted(async () => {
-  // Países con bandera + emoji + dialDigits
+  // Países con bandera
   countries.value = buildCountryOptions(lang.value).map(c => ({
     ...c,
     dialDigits: (c.dialCode || '').replace(/\D+/g, ''),
@@ -636,49 +640,76 @@ onMounted(async () => {
   }))
   countrySuggestions.value = countries.value.slice(0, 25)
 
-  // Default phone code
   const bySite = siteStore.location?.site?.country_code?.toUpperCase?.()
-  const defIso = bySite && countries.value.some(c => c.code === bySite)
-    ? bySite
-    : (lang.value === 'en' ? 'US' : 'CO')
+  const defIso = bySite && countries.value.some(c => c.code === bySite) ? bySite : (lang.value === 'en' ? 'US' : 'CO')
 
+  // Normaliza si llega string viejo
   if (typeof user.user.phone_code === 'string') {
     const raw = user.user.phone_code.trim().toLowerCase()
     let found = countries.value.find(c => c.code.toLowerCase() === raw)
     if (!found) found = countries.value.find(c => c.name.toLowerCase() === raw)
-    if (!found) found = countries.value.find(c => c.dialDigits === raw.replace(/\D+/g,''))
+    if (!found) found = countries.value.find(c => c.dialDigits === raw.replace(/\D+/g, ''))
     user.user.phone_code = found || null
   }
   if (!user.user.phone_code) {
     user.user.phone_code = countries.value.find(c => c.code === defIso) || null
   }
 
-  // Carga de datos maestros (ARRAY)
-  try {
-    const [sitesRes, paymentsRes] = await Promise.all([
-      fetchService.get(`${URI}/sites`).catch(() => []),
-      fetchService.get(`${URI}/site-payments-complete`).catch(() => [])
-    ])
-    sites.value = Array.isArray(sitesRes) ? sitesRes : []
-    serverDocRaw.value = Array.isArray(paymentsRes) ? paymentsRes : []
+  // Cargas iniciales
+  sites.value = await fetchService.get(`${URI}/sites`) || []
+  payment_method_catalog.value = await fetchService.get(`${URI}/payment_methods`) || []
+  order_types_catalog.value = await fetchService.get(`${URI}/get_all_order_types`) || []
+  sitePaymentsComplete.value = await fetchService.get(`${URI}/site-payments-complete`) || []
 
-    // Asegurar entrada con OTs para cada sede visible, aunque el doc venga vacío
-    sites.value
-      .filter(s => s.show_on_web)
-      .forEach(({ site_id }) => ensureServerEntry(site_id))
-  } catch (e) {
-    console.error('init load error', e)
-    sites.value = []
-    serverDocRaw.value = []
+  // Order type por defecto: si no hay, intentamos Delivery (3) o el primero disponible por sede
+  if (!user.user.order_type?.id) {
+    const list = computedOrderTypes.value
+    user.user.order_type = list.find(o => o.id === 3) || list[0] || null
   }
 
-  // Default de order_type según la sede actual (localizado)
-  user.user.order_type = computedOrderTypes.value?.[0] || null
+  // Sincroniza precio de envío si ya tenemos cobertura + Delivery
+  if (user.user.site?.delivery_cost_cop && user?.user?.order_type?.id == 3) {
+    siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop
+  }
+})
 
-  // Si quedó en “Domicilio” (id 3) y hay costo de envío, reflejarlo
-  if (user?.user?.order_type?.id == 3) {
-    siteStore.location.neigborhood = siteStore.location.neigborhood || {}
-    siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+/* Reaccionar a cambios de idioma (solo para el selector de país) */
+watch(lang, (new_val) => {
+  const prev = user.user.phone_code?.code
+  countries.value = buildCountryOptions(new_val).map(c => ({
+    ...c,
+    dialDigits: (c.dialCode || '').replace(/\D+/g, ''),
+    flag: `https://flagcdn.com/h20/${c.code.toLowerCase()}.png`,
+    flagEmoji: toFlagEmoji(c.code),
+    _imgError: false
+  }))
+  countrySuggestions.value = countries.value.slice(0, 25)
+  user.user.phone_code = countries.value.find(c => c.code === prev) || countries.value.find(c => c.code === (new_val === 'en' ? 'US' : 'CO'))
+})
+
+/* Si cambia el tipo de orden, ajusta delivery price y valida métodos */
+watch(() => user.user.order_type, (new_val) => {
+  if (new_val?.id == 2) {
+    siteStore.location.neigborhood.delivery_price = 0
+  } else {
+    // Delivery / Dine-in: si hay precio previo úsalo; si no, fuerza a re-seleccionar sede si no hay cobertura
+    if (user.user.site?.delivery_cost_cop != null) {
+      siteStore.location.neigborhood.delivery_price = user.user.site.delivery_cost_cop
+    } else if (siteStore?.delivery_price > 0) {
+      siteStore.location.neigborhood.delivery_price = siteStore.delivery_price
+    } else {
+      siteStore.setVisible('currentSite', true)
+    }
+  }
+})
+
+/* Si cambia la sede actual, garantizamos order type válido y reseteamos método de pago si ya no aplica */
+watch(() => siteStore.location?.site?.site_id, () => {
+  ensureValidOrderTypeForCurrentSite()
+  // Si el método de pago actual no existe para el nuevo contexto, limpiamos
+  const ids = new Set(computedPaymentOptions.value.map(m => m.id))
+  if (!ids.has(user.user?.payment_method_option?.id)) {
+    user.user.payment_method_option = null
   }
 })
 </script>
@@ -688,7 +719,7 @@ onMounted(async () => {
 .title { text-align: center; font-size: 2rem; margin: 2rem 0; font-weight: bold; }
 
 .order-type-native {
-  display: flex; z-index: 10000; transition: all ease .3s; width: 100%;
+  display: flex; z-index: 10; transition: all ease .3s; width: 100%;
   background-color: white; border: 1px solid #000; border-radius: .5rem; overflow: hidden;
 }
 .order-type-pill { flex: 1 1 0; display: grid; place-items: center; padding: .6rem 1rem; background: #fff !important; color: #000 !important; border-radius: .5rem; cursor: pointer; border: none; }
@@ -703,15 +734,16 @@ onMounted(async () => {
 .form-group :deep(.p-autocomplete) { width: 100%; flex: 1 1 auto; }
 :deep(.p-autocomplete .p-inputtext), :deep(.p-autocomplete-input) { width: 100%; }
 
+/* Teléfono */
 .phone-row { align-items: start; gap: .75rem; width: 100%; }
 .cc-autocomplete :deep(.p-inputtext) { width: 5rem !important; }
-
 .phone-error { color:#b00020; font-size:.85rem; margin-top:.25rem; }
-input{ width: 100%; }
+input { width: 100%; }
 
+/* Notas */
 .order-notes { height: 8rem; resize: none; width: 100%; }
 
-/* Scrollbar demo (puedes quitarlo) */
+/* Scrollbar demo */
 ::-webkit-scrollbar { width: 1rem; }
 ::-webkit-scrollbar-thumb { background-color: rgb(255, 0, 0); border-radius: 9px; border: 5px solid var(--primary-color); height: 10rem; width: 10rem; }
 </style>
