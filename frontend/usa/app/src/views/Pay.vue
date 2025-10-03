@@ -145,44 +145,33 @@
 
         <span>{{ t('phone') }}</span>
         <div class="form-group phone-row" style="display: flex;">
-          <!-- === País (AutoComplete con código como label) === -->
-
-            <!-- overlay con bandera + código -->
-
-            <AutoComplete style="width: min-content;"
-              v-model="user.user.phone_code"
-              :suggestions="countrySuggestions"
-              optionLabel="dialCode"
-
-              forceSelection
-              :placeholder="t('search_country_or_code')"
-              @complete="countryComplete"
-              class="cc-autocomplete"
-            >
-
+          <!-- País -->
+          <AutoComplete style="width: min-content;"
+            v-model="user.user.phone_code"
+            :suggestions="countrySuggestions"
+            optionLabel="dialCode"
+            forceSelection
+            :placeholder="t('search_country_or_code')"
+            @complete="countryComplete"
+            class="cc-autocomplete"
+          >
             <template #option="slotProps">
-                <div class="flex items-center" style="display: flex;gap: 1rem;">
-                    <img :alt="slotProps.option.flag" :src="slotProps.option.flag" />
-
-                    <div>{{ slotProps.option.name }}  {{ slotProps.option.dialCode }} </div>
-                </div>
+              <div class="flex items-center" style="display: flex;gap: 1rem;">
+                <img :alt="slotProps.option.flag" :src="slotProps.option.flag" />
+                <div>{{ slotProps.option.name }}  {{ slotProps.option.dialCode }} </div>
+              </div>
             </template>
-
             <template #selectedItem="slotProps">
-                  <div class="flex items-center gap-2" style="display: flex;gap: 1rem;">
-                    <img :alt="slotProps.value.flag" :src="slotProps.value.flag" style="width: 20px; height: 14px;" />
-                    <span>{{ slotProps.value.dialCode }}</span>
-                  </div>
+              <div class="flex items-center gap-2" style="display: flex;gap: 1rem;">
+                <img :alt="slotProps.value.flag" :src="slotProps.value.flag" style="width: 20px; height: 14px;" />
+                <span>{{ slotProps.value.dialCode }}</span>
+              </div>
             </template>
-
-
-            </AutoComplete>
-
+          </AutoComplete>
 
           <!-- Número -->
           <div class="phone-number" style="width: 100%;">
-
-            <InputText style="" :disabled="!user.user.phone_code?.dialCode"
+            <InputText :disabled="!user.user.phone_code?.dialCode"
               v-model="user.user.phone_number"
               id="phone_number"
               :placeholder="t('phone')"
@@ -212,13 +201,14 @@
 
         <span>{{ t('payment_method') }}</span>
         <div class="form-group">
+          <!-- AHORA: opciones salen del mapa maestro por sede y tipo de orden -->
           <Select
             style="width: 100%;"
             v-model="user.user.payment_method_option"
             id="payment_method"
             :placeholder="t('payment_method')"
-            :options="user?.user?.order_type?.id === 1 ? paymen_rules?.[siteStore.location?.site?.site_id]?.filter(t => t.id !== 8) : paymen_rules?.[siteStore.location?.site?.site_id]"
-            :optionLabel="user.lang.name == 'en'? 'english_name':  'name'"
+            :options="computedPaymentOptions"
+            :optionLabel="lang === 'en' ? 'english_name' : 'name'"
           />
         </div>
 
@@ -353,20 +343,20 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
 })
 
-const order_types = ref([])
-const payment_method_options = ref([])
-const paymen_rules = ref({})
+/* ====== NUEVO: reglas de pago completas por sede → order_type ====== */
+const payment_rules_complete = ref({}) // { "<site_id>": { "<order_type_id>": [ {id,name,...}, ... ] } }
+const order_types = ref([])            // { "<site_id>": [ {id,name,...}, ... ] }
 const sites = ref([])
 
-// Países/telefonía
+/* Países/telefonía */
 const countries = ref([])
 const countrySuggestions = ref([])
 
-// normalizadores
+/* normalizadores */
 const norm = (s) => (s || '').toString().trim().toLowerCase()
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '')
 
-// ISO -> emoji banderita
+/* ISO -> emoji banderita */
 const toFlagEmoji = (iso2) => {
   if (!iso2) return '🏳️'
   return iso2
@@ -393,8 +383,6 @@ const countryComplete = (e) => {
 
     if (name.includes(qNorm) || iso.includes(qNorm)) return true
     if (!qDigits) return false
-
-    // Soporta "+1 929", "1-929", "(+1)929" comparando solo dígitos
     if (dialDigits.startsWith(qDigits) || qDigits.startsWith(dialDigits)) return true
     return false
   })
@@ -404,7 +392,7 @@ const countryComplete = (e) => {
     .slice(0, 50)
 }
 
-// Control tipo de orden
+/* Control tipo de orden */
 const orderTypeIdStr = computed({
   get: () => (user.user.order_type?.id != null ? String(user.user.order_type.id) : null),
   set: (idStr) => {
@@ -417,7 +405,7 @@ const orderTypeIdStr = computed({
 const see_sites = ref(false)
 const uri_api_google =  'https://api.stripe.salchimonster.com'
 
-// Autocomplete direcciones
+/* Autocomplete direcciones */
 const addressQuery = ref('')
 const dir_options = ref([])
 const sessionToken = ref(null)
@@ -507,7 +495,7 @@ const onAddressSelect = async (e) => {
   }
 }
 
-// === Teléfono: validación y formateo ===
+/* Teléfono */
 const phoneError = ref(null)
 
 const formatPhoneOnBlur = () => {
@@ -531,7 +519,7 @@ watch([() => user.user.phone_number, () => user.user.phone_code], ([num, country
   const phone = parsePhoneNumberFromString(raw, countryIso)
 
   if (phone && phone.isValid()) {
-    user.user.phone_e164 = phone.number        // +573001234567 para backend
+    user.user.phone_e164 = phone.number
   } else {
     user.user.phone_e164 = null
     phoneError.value = lang.value === 'en'
@@ -540,6 +528,7 @@ watch([() => user.user.phone_number, () => user.user.phone_code], ([num, country
   }
 }, { immediate: true })
 
+/* ====== Carga inicial (nuevo esquema) ====== */
 onMounted(async () => {
   // Países con bandera (FlagCDN) + emoji fallback y dialDigits
   countries.value = buildCountryOptions(lang.value).map(c => ({
@@ -548,11 +537,7 @@ onMounted(async () => {
     flag: `https://flagcdn.com/h20/${c.code.toLowerCase()}.png`,
     flagEmoji: toFlagEmoji(c.code),
     _imgError: false
-
-
-
   }))
-
   countrySuggestions.value = countries.value.slice(0, 25)
 
   const bySite = siteStore.location?.site?.country_code?.toUpperCase?.()
@@ -560,7 +545,6 @@ onMounted(async () => {
     ? bySite
     : (lang.value === 'en' ? 'US' : 'CO')
 
-  // Normaliza si llega string viejo
   if (typeof user.user.phone_code === 'string') {
     const raw = user.user.phone_code.trim().toLowerCase()
     let found = countries.value.find(c => c.code.toLowerCase() === raw)
@@ -568,45 +552,38 @@ onMounted(async () => {
     if (!found) found = countries.value.find(c => c.dialDigits === raw.replace(/\D+/g,''))
     user.user.phone_code = found || null
   }
-
   if (!user.user.phone_code) {
     user.user.phone_code = countries.value.find(c => c.code === defIso) || null
   }
 
-  paymen_rules.value = await fetchService.get(`${URI}/site-payments`)
+  // Carga de datos maestros
   sites.value = await fetchService.get(`${URI}/sites`)
-  payment_method_options.value = await fetchService.get(`${URI}/payment_methods`)
-  order_types.value = await fetchService.get(`${URI}/site-order-types/`)
+  // Mapa de tipos de orden por sede (ej: { "37": [ {id:1,name:'Delivery'}, ... ] })
+  order_types.value = await fetchService.get(`${URI}/site-order-types/`) || {}
+  // NUEVO: documento maestro de métodos por sede → tipo de orden
+  payment_rules_complete.value = (await fetchService.get(`${URI}/site-payments-complete`)) ?? {}
 
-    user.user.order_type = computedOrderTypes.value?.[0]
+  // Default de order_type según la sede actual
+  user.user.order_type = computedOrderTypes.value?.[0] || null
 
   if (user?.user?.order_type?.id == 1) {
     siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
   }
-
-
 })
 
+/* ====== Reacciones ====== */
 watch(() => user.user.order_type, (new_val) => {
   if (new_val?.id == 2) {
     siteStore.location.neigborhood.delivery_price = 0
-  } else if
-
-     (user.user.site?.nearest?.site){
-      siteStore.location.site = user.user.site?.nearest?.site
-      siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
-    }
-
+  } else if (user.user.site?.nearest?.site) {
+    siteStore.location.site = user.user.site?.nearest?.site
+    siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
   }
-
-)
-
-
-watch( () => siteStore.location.site, () => {
-  user.user.order_type = computedOrderTypes.value?.[0]
-
 })
 
+watch(() => siteStore.location.site, () => {
+  user.user.order_type = computedOrderTypes.value?.[0] || null
+})
 
 watch(lang , (new_val) => {
   const prev = user.user.phone_code?.code
@@ -625,16 +602,27 @@ watch(() => user.user.order_type, () => {
   user.user.placa = null
 })
 
+/* Guardar selección de sede */
 const save = () => {
   see_sites.value = false
   siteStore.location.site = user.user.site?.nearest?.site
   siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
-
 }
 
+/* ====== Computados clave ====== */
 const computedOrderTypes = computed(() => {
   const currentSiteId = siteStore.location?.site?.site_id
-  return order_types.value?.[currentSiteId] || []
+  const list = order_types.value?.[currentSiteId] || []
+  return Array.isArray(list) ? list : []
+})
+
+const computedPaymentOptions = computed(() => {
+  const siteId = siteStore.location?.site?.site_id
+  const otId = user.user.order_type?.id
+  const bySite = payment_rules_complete.value?.[siteId] || payment_rules_complete.value?.[String(siteId)] || {}
+  const list = bySite?.[otId] || bySite?.[String(otId)] || []
+  // Si viene nulo/indefinido, devolvemos arreglo vacío
+  return Array.isArray(list) ? list : []
 })
 </script>
 
@@ -670,15 +658,13 @@ const computedOrderTypes = computed(() => {
 .flag-emoji { font-size: 16px; line-height: 1; }
 .cc-code { font-weight: 600; font-size: .95rem; }
 
-
 .phone-error { color:#b00020; font-size:.85rem; margin-top:.25rem; }
-input{
-  width: 100%;
-}
+input{ width: 100%; }
+
 /* Notas */
 .order-notes { height: 8rem; resize: none; width: 100%; }
 
-/* Scrollbar demo */
+/* Scrollbar demo (puedes quitarlo) */
 ::-webkit-scrollbar { width: 1rem; }
 ::-webkit-scrollbar-thumb { background-color: rgb(255, 0, 0); border-radius: 9px; border: 5px solid var(--primary-color); height: 10rem; width: 10rem; }
 </style>
