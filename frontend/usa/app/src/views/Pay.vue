@@ -108,7 +108,7 @@
                 :value="String(opt.id)"
                 v-model="orderTypeIdStr"
               />
-              <span>{{ opt.name }}</span>
+              <span>{{ lang === 'en' ? (opt.english_name || opt.name) : (opt.name || opt.english_name) }} </span>
             </label>
           </div>
         </div>
@@ -133,13 +133,13 @@
           <span>{{ t('site_recoger') }}</span>
           <div class="form-group" style="display: flex;flex-direction: column;justify-content: start;align-items: start;">
             <InputText
-              @click="siteStore.setVisible('currentSite', true)"
+              @click="siteStore.setVisible && siteStore.setVisible('currentSite', true)"
               :modelValue="siteStore?.location?.site?.site_name"
               id="neighborhood"
               placeholder="Ubicacion"
               readonly
             />
-            <Tag> {{ siteStore?.location?.site?.site_address }}</Tag>
+            <Tag v-if="siteStore?.location?.site?.site_address"> {{ siteStore?.location?.site?.site_address }}</Tag>
           </div>
         </template>
 
@@ -201,7 +201,7 @@
 
         <span>{{ t('payment_method') }}</span>
         <div class="form-group">
-          <!-- AHORA: opciones salen del mapa maestro por sede y tipo de orden -->
+          <!-- Opciones de pago: vienen del doc ARRAY por sede y order_type, con labels localizados -->
           <Select
             style="width: 100%;"
             v-model="user.user.payment_method_option"
@@ -218,14 +218,6 @@
           class="order-notes"
           :placeholder="t('additional_notes')"
         />
-
-        <template>
-          <Textarea
-            v-model="store.cart.order_notes"
-            class="order-notes"
-            :placeholder="t('notes')"
-          />
-        </template>
       </div>
 
       <resumen class="resumen-column" style="margin:0 .3rem;padding-top: .5rem;"></resumen>
@@ -257,6 +249,7 @@ const user = useUserStore()
 const siteStore = useSitesStore()
 const store = usecartStore()
 
+/* ====== i18n ====== */
 const lang = computed(() => {
   const v = (user?.lang?.name || 'es').toString().toLowerCase()
   return v === 'en' ? 'en' : 'es'
@@ -318,15 +311,18 @@ const DICT = {
 }
 const t = (key) => (DICT[lang.value] && DICT[lang.value][key]) || (DICT.es[key] || key)
 
+/* ====== Dinero ====== */
 const formatCOP = (v) => {
   try {
-    return new Intl.NumberFormat(lang.value === 'en' ? 'en-CO' : 'es-CO', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(v || 0))
+    return new Intl.NumberFormat(lang.value === 'en' ? 'en-CO' : 'es-CO', {
+      style: 'currency', currency: 'COP', maximumFractionDigits: 0
+    }).format(Number(v || 0))
   } catch {
     return `COP ${Number(v || 0).toLocaleString()}`
   }
 }
 
-// Sticky
+/* ====== Sticky ====== */
 const lastScrollY = ref(0)
 const sticky = ref(false)
 const handleScroll = () => {
@@ -343,20 +339,44 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
 })
 
-/* ====== NUEVO: reglas de pago completas por sede → order_type ====== */
-const payment_rules_complete = ref({}) // { "<site_id>": { "<order_type_id>": [ {id,name,...}, ... ] } }
-const order_types = ref([])            // { "<site_id>": [ {id,name,...}, ... ] }
-const sites = ref([])
+/* ====== DOC MAESTRO (ARRAY) ======
+ * serverDocRaw = [
+ *   { site_id, order_types: [ { id, name, english_name, methods: [ {id, name, english_name, ...}, ... ] } ] }
+ * ]
+ */
+const serverDocRaw = ref([])
+
+/** Fallback si el doc viene vacío (2 = Recoger, 3 = Domicilio) */
+const DEFAULT_ORDER_TYPES = Object.freeze([
+  { id: 2, name: 'Recoger',   english_name: 'Pickup',   methods: [] },
+  { id: 3, name: 'Domicilio', english_name: 'Delivery', methods: [] },
+])
+
+/** Garantiza entrada para la sede con order_types iniciales si no hay datos */
+const ensureServerEntry = (site_id) => {
+  let entry = serverDocRaw.value.find(s => String(s.site_id) === String(site_id))
+  if (!entry) {
+    entry = {
+      site_id,
+      order_types: DEFAULT_ORDER_TYPES.map(ot => ({
+        id: ot.id, name: ot.name, english_name: ot.english_name, methods: []
+      }))
+    }
+    serverDocRaw.value.push(entry)
+  } else if (!Array.isArray(entry.order_types) || entry.order_types.length === 0) {
+    entry.order_types = DEFAULT_ORDER_TYPES.map(ot => ({
+      id: ot.id, name: ot.name, english_name: ot.english_name, methods: []
+    }))
+  }
+  return entry
+}
 
 /* Países/telefonía */
 const countries = ref([])
 const countrySuggestions = ref([])
 
-/* normalizadores */
 const norm = (s) => (s || '').toString().trim().toLowerCase()
 const onlyDigits = (s) => (s || '').replace(/\D+/g, '')
-
-/* ISO -> emoji banderita */
 const toFlagEmoji = (iso2) => {
   if (!iso2) return '🏳️'
   return iso2
@@ -392,12 +412,12 @@ const countryComplete = (e) => {
     .slice(0, 50)
 }
 
-/* Control tipo de orden */
+/* ====== Tipo de orden (usa serverDocRaw ARRAY) ====== */
 const orderTypeIdStr = computed({
   get: () => (user.user.order_type?.id != null ? String(user.user.order_type.id) : null),
   set: (idStr) => {
     const id = Number(idStr)
-    const opt = computedOrderTypes.value.find(o => o.id === id) || null
+    const opt = computedOrderTypes.value.find(o => Number(o.id) === id) || null
     user.user.order_type = opt
   }
 })
@@ -405,14 +425,10 @@ const orderTypeIdStr = computed({
 const see_sites = ref(false)
 const uri_api_google =  'https://api.stripe.salchimonster.com'
 
-/* Autocomplete direcciones */
+/* ====== Autocomplete direcciones ====== */
 const addressQuery = ref('')
 const dir_options = ref([])
 const sessionToken = ref(null)
-
-const regionPref = computed(() => {
-  return (user.phone_code?.code || siteStore.location?.site?.country_code || 'CO').toLowerCase()
-})
 const maxSuggestions = 5
 
 const newSession = () => {
@@ -482,8 +498,10 @@ const onAddressSelect = async (e) => {
     autocompleteError.value = details?.error || null
 
     if (details?.delivery_cost_cop != null) {
+      siteStore.location.neigborhood = siteStore.location.neigborhood || {}
       siteStore.location.neigborhood.delivery_price = details.delivery_cost_cop
     } else {
+      siteStore.location.neigborhood = siteStore.location.neigborhood || {}
       siteStore.location.neigborhood.delivery_price = null
     }
   } catch (err) {
@@ -495,7 +513,7 @@ const onAddressSelect = async (e) => {
   }
 }
 
-/* Teléfono */
+/* ====== Teléfono ====== */
 const phoneError = ref(null)
 
 const formatPhoneOnBlur = () => {
@@ -528,55 +546,56 @@ watch([() => user.user.phone_number, () => user.user.phone_code], ([num, country
   }
 }, { immediate: true })
 
-/* ====== Carga inicial (nuevo esquema) ====== */
-onMounted(async () => {
-  // Países con bandera (FlagCDN) + emoji fallback y dialDigits
-  countries.value = buildCountryOptions(lang.value).map(c => ({
-    ...c,
-    dialDigits: (c.dialCode || '').replace(/\D+/g, ''),
-    flag: `https://flagcdn.com/h20/${c.code.toLowerCase()}.png`,
-    flagEmoji: toFlagEmoji(c.code),
-    _imgError: false
+/* ====== Sitios ====== */
+const sites = ref([])
+
+/* ====== Computados con serverDocRaw (ARRAY) ====== */
+const computedOrderTypes = computed(() => {
+  const currentSiteId = siteStore.location?.site?.site_id
+  if (currentSiteId == null) return []
+  const entry = serverDocRaw.value.find(s => String(s.site_id) === String(currentSiteId))
+  const list = (entry?.order_types?.length ? entry.order_types : DEFAULT_ORDER_TYPES)
+  return list.map(ot => ({
+    id: Number(ot.id),
+    name: ot.name ?? (ot.english_name || `OT ${ot.id}`),
+    english_name: ot.english_name ?? (ot.name || `OT ${ot.id}`)
   }))
-  countrySuggestions.value = countries.value.slice(0, 25)
-
-  const bySite = siteStore.location?.site?.country_code?.toUpperCase?.()
-  const defIso = bySite && countries.value.some(c => c.code === bySite)
-    ? bySite
-    : (lang.value === 'en' ? 'US' : 'CO')
-
-  if (typeof user.user.phone_code === 'string') {
-    const raw = user.user.phone_code.trim().toLowerCase()
-    let found = countries.value.find(c => c.code.toLowerCase() === raw)
-    if (!found) found = countries.value.find(c => c.name.toLowerCase() === raw)
-    if (!found) found = countries.value.find(c => c.dialDigits === raw.replace(/\D+/g,''))
-    user.user.phone_code = found || null
-  }
-  if (!user.user.phone_code) {
-    user.user.phone_code = countries.value.find(c => c.code === defIso) || null
-  }
-
-  // Carga de datos maestros
-  sites.value = await fetchService.get(`${URI}/sites`)
-  // Mapa de tipos de orden por sede (ej: { "37": [ {id:1,name:'Delivery'}, ... ] })
-  order_types.value = await fetchService.get(`${URI}/site-order-types/`) || {}
-  // NUEVO: documento maestro de métodos por sede → tipo de orden
-  payment_rules_complete.value = (await fetchService.get(`${URI}/site-payments-complete`)) ?? {}
-
-  // Default de order_type según la sede actual
-  user.user.order_type = computedOrderTypes.value?.[0] || null
-
-  if (user?.user?.order_type?.id == 1) {
-    siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
-  }
 })
+
+const computedPaymentOptions = computed(() => {
+  const siteId = siteStore.location?.site?.site_id
+  const otId = user.user.order_type?.id
+  if (siteId == null || otId == null) return []
+  const entry = serverDocRaw.value.find(s => String(s.site_id) === String(siteId))
+  const orderTypes = entry?.order_types?.length ? entry.order_types : DEFAULT_ORDER_TYPES
+  const found = orderTypes.find(ot => Number(ot.id) === Number(otId))
+  const list = Array.isArray(found?.methods) ? found.methods : []
+  return list.map(m => ({
+    ...m,
+    name: m?.name ?? m?.english_name ?? '—',
+    english_name: m?.english_name ?? m?.name ?? '—'
+  }))
+})
+
+/* ====== Guardar selección de sede ====== */
+const save = () => {
+  see_sites.value = false
+  if (user?.user?.site?.nearest?.site) {
+    siteStore.location.site = user.user.site.nearest.site
+  }
+  siteStore.location.neigborhood = siteStore.location.neigborhood || {}
+  siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+}
 
 /* ====== Reacciones ====== */
 watch(() => user.user.order_type, (new_val) => {
   if (new_val?.id == 2) {
+    // Recoger
+    siteStore.location.neigborhood = siteStore.location.neigborhood || {}
     siteStore.location.neigborhood.delivery_price = 0
   } else if (user.user.site?.nearest?.site) {
     siteStore.location.site = user.user.site?.nearest?.site
+    siteStore.location.neigborhood = siteStore.location.neigborhood || {}
     siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
   }
 })
@@ -595,34 +614,72 @@ watch(lang , (new_val) => {
     _imgError: false
   }))
   countrySuggestions.value = countries.value.slice(0, 25)
-  user.user.phone_code = countries.value.find(c => c.code === prev) || countries.value.find(c => c.code === (new_val === 'en' ? 'US' : 'CO'))
+  user.user.phone_code =
+    countries.value.find(c => c.code === prev) ||
+    countries.value.find(c => c.code === (new_val === 'en' ? 'US' : 'CO')) ||
+    null
 })
 
 watch(() => user.user.order_type, () => {
   user.user.placa = null
 })
 
-/* Guardar selección de sede */
-const save = () => {
-  see_sites.value = false
-  siteStore.location.site = user.user.site?.nearest?.site
-  siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
-}
+/* ====== Carga inicial (ARRAY con fallback) ====== */
+onMounted(async () => {
+  // Países con bandera + emoji + dialDigits
+  countries.value = buildCountryOptions(lang.value).map(c => ({
+    ...c,
+    dialDigits: (c.dialCode || '').replace(/\D+/g, ''),
+    flag: `https://flagcdn.com/h20/${c.code.toLowerCase()}.png`,
+    flagEmoji: toFlagEmoji(c.code),
+    _imgError: false
+  }))
+  countrySuggestions.value = countries.value.slice(0, 25)
 
-/* ====== Computados clave ====== */
-const computedOrderTypes = computed(() => {
-  const currentSiteId = siteStore.location?.site?.site_id
-  const list = order_types.value?.[currentSiteId] || []
-  return Array.isArray(list) ? list : []
-})
+  // Default phone code
+  const bySite = siteStore.location?.site?.country_code?.toUpperCase?.()
+  const defIso = bySite && countries.value.some(c => c.code === bySite)
+    ? bySite
+    : (lang.value === 'en' ? 'US' : 'CO')
 
-const computedPaymentOptions = computed(() => {
-  const siteId = siteStore.location?.site?.site_id
-  const otId = user.user.order_type?.id
-  const bySite = payment_rules_complete.value?.[siteId] || payment_rules_complete.value?.[String(siteId)] || {}
-  const list = bySite?.[otId] || bySite?.[String(otId)] || []
-  // Si viene nulo/indefinido, devolvemos arreglo vacío
-  return Array.isArray(list) ? list : []
+  if (typeof user.user.phone_code === 'string') {
+    const raw = user.user.phone_code.trim().toLowerCase()
+    let found = countries.value.find(c => c.code.toLowerCase() === raw)
+    if (!found) found = countries.value.find(c => c.name.toLowerCase() === raw)
+    if (!found) found = countries.value.find(c => c.dialDigits === raw.replace(/\D+/g,''))
+    user.user.phone_code = found || null
+  }
+  if (!user.user.phone_code) {
+    user.user.phone_code = countries.value.find(c => c.code === defIso) || null
+  }
+
+  // Carga de datos maestros (ARRAY)
+  try {
+    const [sitesRes, paymentsRes] = await Promise.all([
+      fetchService.get(`${URI}/sites`).catch(() => []),
+      fetchService.get(`${URI}/site-payments-complete`).catch(() => [])
+    ])
+    sites.value = Array.isArray(sitesRes) ? sitesRes : []
+    serverDocRaw.value = Array.isArray(paymentsRes) ? paymentsRes : []
+
+    // Asegurar entrada con OTs para cada sede visible, aunque el doc venga vacío
+    sites.value
+      .filter(s => s.show_on_web)
+      .forEach(({ site_id }) => ensureServerEntry(site_id))
+  } catch (e) {
+    console.error('init load error', e)
+    sites.value = []
+    serverDocRaw.value = []
+  }
+
+  // Default de order_type según la sede actual (localizado)
+  user.user.order_type = computedOrderTypes.value?.[0] || null
+
+  // Si quedó en “Domicilio” (id 3) y hay costo de envío, reflejarlo
+  if (user?.user?.order_type?.id == 3) {
+    siteStore.location.neigborhood = siteStore.location.neigborhood || {}
+    siteStore.location.neigborhood.delivery_price = user.user.site?.delivery_cost_cop ?? null
+  }
 })
 </script>
 
@@ -646,22 +703,12 @@ const computedPaymentOptions = computed(() => {
 .form-group :deep(.p-autocomplete) { width: 100%; flex: 1 1 auto; }
 :deep(.p-autocomplete .p-inputtext), :deep(.p-autocomplete-input) { width: 100%; }
 
-/* ====== Teléfono ====== */
 .phone-row { align-items: start; gap: .75rem; width: 100%; }
-.cc-wrapper { position: relative; width: 20rem; max-width: 100%; }
-.cc-autocomplete :deep(.p-inputtext) { width: 5rem !important; } /* espacio para overlay */
-.cc-overlay {
-  position: absolute; top: 50%; left: .5rem; transform: translateY(-50%);
-  display: inline-flex; align-items: center; gap: .35rem; pointer-events: none;
-}
-.flag-img { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
-.flag-emoji { font-size: 16px; line-height: 1; }
-.cc-code { font-weight: 600; font-size: .95rem; }
+.cc-autocomplete :deep(.p-inputtext) { width: 5rem !important; }
 
 .phone-error { color:#b00020; font-size:.85rem; margin-top:.25rem; }
 input{ width: 100%; }
 
-/* Notas */
 .order-notes { height: 8rem; resize: none; width: 100%; }
 
 /* Scrollbar demo (puedes quitarlo) */
