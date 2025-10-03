@@ -89,7 +89,7 @@
 
     <div class="form-grid">
       <div class="form-column">
-        <!-- Selector de Order Types calculados por sede -->
+        <!-- Selector de Order Types calculados por sede (solo con métodos disponibles) -->
         <div
           style="position: sticky; background-color: #f8f4fc; transition: all .3s ease; z-index: 5; margin-bottom: 0rem; padding-top: .5rem;"
           :style="!sticky ? 'top: 3.5rem;' : 'top: 0;'"
@@ -110,7 +110,7 @@
                 :value="String(opt.id)"
                 v-model="orderTypeIdStr"
               />
-              <span>{{ opt.name }}</span>
+              <span>{{ lang === 'en' ? (opt.english_name || opt.name) : opt.name }}</span>
             </label>
           </div>
         </div>
@@ -371,9 +371,9 @@ onBeforeUnmount(() => {
 
 /* =============== Catálogos / reglas =============== */
 const order_types_catalog = ref([])                 // catálogo global (fallback de nombres)
-const payment_method_catalog = ref([])              // catálogo global (fallback de métodos)
+const payment_method_catalog = ref([])              // catálogo global (solo para enriquecer labels)
 const sitePaymentsComplete = ref([])                // ← fuente principal por sede y order_type
-const sites = ref([])                               // sedes (para validar site_id si hace falta)
+const sites = ref([])                               // sedes
 
 /* Fallback cuando el doc viene vacío */
 const DEFAULT_ORDER_TYPES = Object.freeze([
@@ -394,11 +394,7 @@ const countryComplete = (e) => {
   const q = (e?.query ?? '')
   const qNorm = norm(q)
   const qDigits = onlyDigits(q)
-
-  if (!qNorm) {
-    countrySuggestions.value = countries.value.slice(0, 25)
-    return
-  }
+  if (!qNorm) { countrySuggestions.value = countries.value.slice(0, 25); return }
   let list = countries.value.filter(c => {
     const name = norm(c.name)
     const iso  = norm(c.code)
@@ -485,7 +481,7 @@ const onAddressSelect = async (e) => {
     if (details?.delivery_cost_cop != null) siteStore.location.neigborhood.delivery_price = details.delivery_cost_cop
     else siteStore.location.neigborhood.delivery_price = null
 
-    // Al elegir dirección, si cambia la sede, refrescamos order types/payment options
+    // Si cambió sede => recalcular visibilidad de tipos y métodos
     ensureValidOrderTypeForCurrentSite()
   } catch (err) {
     console.error('Coverage Details error:', err)
@@ -524,6 +520,25 @@ watch([() => user.user.phone_number, () => user.user.phone_code], ([num, country
   }
 }, { immediate: true })
 
+/* =============== Helpers del doc por sede =============== */
+const getEntryForSite = (site_id) => {
+  const idStr = String(site_id ?? '')
+  if (!idStr) return null
+  const entry = sitePaymentsComplete.value.find(s => String(s.site_id) === idStr)
+  return entry || null
+}
+
+/** Devuelve los métodos (del doc) para un site + order_type (sin fallbacks) */
+const docMethodsFor = (site_id, order_type_id) => {
+  const entry = getEntryForSite(site_id)
+  if (!entry || !Array.isArray(entry.order_types)) return []
+  const ot = entry.order_types.find(o => Number(o.id) === Number(order_type_id))
+  if (!ot || !Array.isArray(ot.methods)) return []
+  return ot.methods
+    .map(m => (m && typeof m === 'object' ? m : { id: m }))
+    .filter(x => x?.id != null)
+}
+
 /* =============== Control tipo de orden (por sede) =============== */
 const orderTypeIdStr = computed({
   get: () => (user.user.order_type?.id != null ? String(user.user.order_type.id) : null),
@@ -534,73 +549,54 @@ const orderTypeIdStr = computed({
   }
 })
 
-/* Utilidades para leer el doc por sede */
-const getEntryForSite = (site_id) => {
-  const idStr = String(site_id ?? '')
-  if (!idStr) return null
-  const entry = sitePaymentsComplete.value.find(s => String(s.site_id) === idStr)
-  return entry || null
-}
-
+/** Tipos visibles = solo [1,2,3] que tengan métodos en el doc para la sede actual */
 const computedOrderTypes = computed(() => {
   const currentSiteId = siteStore.location?.site?.site_id
   const entry = getEntryForSite(currentSiteId)
-  if (entry && Array.isArray(entry.order_types) && entry.order_types.length) {
-    // Normalizamos ids/nombres y solo mostramos 1,2,3 si existieran
-    const list = entry.order_types
-      .map(ot => ({ id: Number(ot.id), name: ot.name ?? (order_types_catalog.value.find(o => o.id === Number(ot.id))?.name ?? `OT ${ot.id}`), english_name: ot.english_name ?? null }))
-      .filter(ot => [1,2,3].includes(ot.id))
-    // Fallback si por alguna razón la lista queda vacía
-    if (list.length) return list
-  }
-  // Fallback global
-  return DEFAULT_ORDER_TYPES
+
+  const base = (entry && Array.isArray(entry.order_types) && entry.order_types.length)
+    ? entry.order_types.map(ot => ({
+        id: Number(ot.id),
+        name: ot.name ?? (order_types_catalog.value.find(o => o.id === Number(ot.id))?.name ?? `OT ${ot.id}`),
+        english_name: ot.english_name ?? null
+      }))
+    : DEFAULT_ORDER_TYPES
+
+  // Filtrar por 1/2/3 y por existencia de métodos en el doc (sin fallbacks)
+  const list = base
+    .filter(ot => [1,2,3].includes(ot.id))
+    .filter(ot => docMethodsFor(currentSiteId, ot.id).length > 0)
+
+  // Si quedó vacío, no mostramos nada (o podrías volver al fallback DEFAULT si lo prefieres)
+  return list.length ? list : []
 })
 
-/* Opciones de pago por site + order_type (con fallback) */
+/** Opciones de pago para el select = métodos del doc (enriquecidos con catálogo) */
 const computedPaymentOptions = computed(() => {
   const currentSiteId = siteStore.location?.site?.site_id
   const currentOtId = user.user.order_type?.id
-  const entry = getEntryForSite(currentSiteId)
-
-  let methods = []
-
-  if (entry && Array.isArray(entry.order_types)) {
-    const ot = entry.order_types.find(o => Number(o.id) === Number(currentOtId))
-    if (ot && Array.isArray(ot.methods) && ot.methods.length) {
-      // El doc ya trae objetos completos (id, name, english_name, icon, etc.)
-      methods = ot.methods.map(m => ({
-        id: m.id,
-        name: m.name ?? (payment_method_catalog.value.find(pm => pm.id === m.id)?.name ?? `M ${m.id}`),
-        english_name: m.english_name ?? (payment_method_catalog.value.find(pm => pm.id === m.id)?.english_name ?? null),
-        icon: m.icon ?? m.icon_class ?? null,
-        code: m.code ?? m.slug ?? null,
-      }))
+  if (!currentSiteId || !currentOtId) return []
+  const methods = docMethodsFor(currentSiteId, currentOtId)
+  return methods.map(m => {
+    const pm = payment_method_catalog.value.find(p => p.id === m.id)
+    return {
+      id: m.id,
+      name: m.name ?? pm?.name ?? `M ${m.id}`,
+      english_name: m.english_name ?? pm?.english_name ?? null,
+      icon: m.icon ?? m.icon_class ?? pm?.icon ?? pm?.icon_class ?? null,
+      code: m.code ?? m.slug ?? pm?.code ?? pm?.slug ?? null,
     }
-  }
-
-  // Filtro de ejemplo legacy: si es Delivery (3), quitar id 8 (si aplica)
-  if (user?.user?.order_type?.id === 3) {
-    methods = methods.filter(m => m.id !== 8)
-  }
-
-  // Fallback al catálogo global si quedó vacío
-  if (!methods.length && Array.isArray(payment_method_catalog.value) && payment_method_catalog.value.length) {
-    methods = payment_method_catalog.value
-  }
-  return methods
+  })
 })
 
-/* Garantiza que el order_type seleccionado sea válido para la sede actual */
+/** Garantiza que el order_type actual exista en computedOrderTypes (y elige uno válido si no) */
 const ensureValidOrderTypeForCurrentSite = () => {
   const list = computedOrderTypes.value
   const selectedId = user.user.order_type?.id
   const stillValid = list.some(o => o.id === Number(selectedId))
   if (!stillValid) {
-    // preferimos Delivery (3) si existe; si no, el primero disponible
-    const prefer = list.find(o => o.id === 3) || list[0] || null
-    if (prefer) user.user.order_type = prefer
-    else user.user.order_type = null
+    // Preferimos Delivery (3) si existe
+    user.user.order_type = list.find(o => o.id === 3) || list[0] || null
   }
 }
 
@@ -612,7 +608,7 @@ const save = () => {
   ensureValidOrderTypeForCurrentSite()
 }
 
-/* =============== Descuentos (validación básica) =============== */
+/* =============== Descuentos =============== */
 const validateDiscoun = async (code) => {
   if (!siteStore.location.site) {
     alert('Por favor selecciona una sede para validar tu descuento')
@@ -643,7 +639,6 @@ onMounted(async () => {
   const bySite = siteStore.location?.site?.country_code?.toUpperCase?.()
   const defIso = bySite && countries.value.some(c => c.code === bySite) ? bySite : (lang.value === 'en' ? 'US' : 'CO')
 
-  // Normaliza si llega string viejo
   if (typeof user.user.phone_code === 'string') {
     const raw = user.user.phone_code.trim().toLowerCase()
     let found = countries.value.find(c => c.code.toLowerCase() === raw)
@@ -661,11 +656,8 @@ onMounted(async () => {
   order_types_catalog.value = await fetchService.get(`${URI}/get_all_order_types`) || []
   sitePaymentsComplete.value = await fetchService.get(`${URI}/site-payments-complete`) || []
 
-  // Order type por defecto: si no hay, intentamos Delivery (3) o el primero disponible por sede
-  if (!user.user.order_type?.id) {
-    const list = computedOrderTypes.value
-    user.user.order_type = list.find(o => o.id === 3) || list[0] || null
-  }
+  // Selección por defecto válida
+  ensureValidOrderTypeForCurrentSite()
 
   // Sincroniza precio de envío si ya tenemos cobertura + Delivery
   if (user.user.site?.delivery_cost_cop && user?.user?.order_type?.id == 3) {
@@ -687,12 +679,11 @@ watch(lang, (new_val) => {
   user.user.phone_code = countries.value.find(c => c.code === prev) || countries.value.find(c => c.code === (new_val === 'en' ? 'US' : 'CO'))
 })
 
-/* Si cambia el tipo de orden, ajusta delivery price y valida métodos */
+/* Si cambia el tipo de orden, ajustar delivery price y validar método de pago activo */
 watch(() => user.user.order_type, (new_val) => {
   if (new_val?.id == 2) {
     siteStore.location.neigborhood.delivery_price = 0
   } else {
-    // Delivery / Dine-in: si hay precio previo úsalo; si no, fuerza a re-seleccionar sede si no hay cobertura
     if (user.user.site?.delivery_cost_cop != null) {
       siteStore.location.neigborhood.delivery_price = user.user.site.delivery_cost_cop
     } else if (siteStore?.delivery_price > 0) {
@@ -701,12 +692,16 @@ watch(() => user.user.order_type, (new_val) => {
       siteStore.setVisible('currentSite', true)
     }
   }
+  // limpiar método de pago si ya no aplica al nuevo tipo
+  const ids = new Set(computedPaymentOptions.value.map(m => m.id))
+  if (!ids.has(user.user?.payment_method_option?.id)) {
+    user.user.payment_method_option = null
+  }
 })
 
-/* Si cambia la sede actual, garantizamos order type válido y reseteamos método de pago si ya no aplica */
+/* Si cambia la sede actual => garantizar tipo válido y método válido */
 watch(() => siteStore.location?.site?.site_id, () => {
   ensureValidOrderTypeForCurrentSite()
-  // Si el método de pago actual no existe para el nuevo contexto, limpiamos
   const ids = new Set(computedPaymentOptions.value.map(m => m.id))
   if (!ids.has(user.user?.payment_method_option?.id)) {
     user.user.payment_method_option = null
@@ -734,13 +729,11 @@ watch(() => siteStore.location?.site?.site_id, () => {
 .form-group :deep(.p-autocomplete) { width: 100%; flex: 1 1 auto; }
 :deep(.p-autocomplete .p-inputtext), :deep(.p-autocomplete-input) { width: 100%; }
 
-/* Teléfono */
 .phone-row { align-items: start; gap: .75rem; width: 100%; }
 .cc-autocomplete :deep(.p-inputtext) { width: 5rem !important; }
 .phone-error { color:#b00020; font-size:.85rem; margin-top:.25rem; }
 input { width: 100%; }
 
-/* Notas */
 .order-notes { height: 8rem; resize: none; width: 100%; }
 
 /* Scrollbar demo */
