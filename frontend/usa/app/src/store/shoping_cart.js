@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { URI } from '../service/conection'
 import { menu } from './menu.js';
-export const usecartStore = defineStore('salchi_super_cart_web443', {
+export const usecartStore = defineStore('salchfsi_super_cart_web443', {
   persist: {
-    key: 'salchi_super_cart_web443',
+    key: 'salchi_supergsge_cart_web443',
     storage: sessionStorage,
     paths: ['cart', 'last_order', 'menu', 'address_details'],
   },
