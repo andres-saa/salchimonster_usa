@@ -94,9 +94,9 @@
           style="position: sticky; background-color: #f8f4fc; transition: all .3s ease; z-index: 5; margin-bottom: 0rem; padding-top: .5rem;"
           :style="!sticky ? 'top: 3.5rem;' : 'top: 0;'"
         >
-          <div class="order-type-native" role="radiogroup" :aria-label="t('delivery_method')">
+        <div class="order-type-native" role="radiogroup" :aria-label="t('delivery_method')">
             <label
-              v-for="opt in computedOrderTypes"
+              v-for="opt in get_order_types_for"
               :key="opt.id"
               style="border: none; outline: none; background-color: white;"
               class="order-type-pill"
@@ -110,7 +110,7 @@
                 :value="String(opt.id)"
                 v-model="orderTypeIdStr"
               />
-              <span>{{ lang === 'en' ? (opt.english_name || opt.name) : opt.name }}</span>
+              <span>{{ user.lang.name == 'es'? opt.name : opt.english_name }}</span>
             </label>
           </div>
         </div>
@@ -572,22 +572,7 @@ const computedOrderTypes = computed(() => {
 })
 
 /** Opciones de pago para el select = métodos del doc (enriquecidos con catálogo) */
-const computedPaymentOptions = computed(() => {
-  const currentSiteId = siteStore.location?.site?.site_id
-  const currentOtId = user.user.order_type?.id
-  if (!currentSiteId || !currentOtId) return []
-  const methods = docMethodsFor(currentSiteId, currentOtId)
-  return methods.map(m => {
-    const pm = payment_method_catalog.value.find(p => p.id === m.id)
-    return {
-      id: m.id,
-      name: m.name ?? pm?.name ?? `M ${m.id}`,
-      english_name: m.english_name ?? pm?.english_name ?? null,
-      icon: m.icon ?? m.icon_class ?? pm?.icon ?? pm?.icon_class ?? null,
-      code: m.code ?? m.slug ?? pm?.code ?? pm?.slug ?? null,
-    }
-  })
-})
+
 
 /** Garantiza que el order_type actual exista en computedOrderTypes (y elige uno válido si no) */
 const ensureValidOrderTypeForCurrentSite = () => {
@@ -708,6 +693,26 @@ watch(() => siteStore.location?.site?.site_id, () => {
   const ids = new Set(computedPaymentOptions.value.map(m => m.id))
   if (!ids.has(user.user?.payment_method_option?.id)) {
     user.user.payment_method_option = null
+  }
+})
+
+const computedPaymentOptions = computed(() => {
+  const data = get_order_types_for.value.find(o => o.id ==  orderTypeIdStr.value)
+  return data?.methods
+})
+
+
+const get_order_types_for = computed( () => {
+  const order_types = sitePaymentsComplete.value?.find(s => s.site_id == siteStore.location?.site?.site_id)
+  const valid_order_types = order_types?.order_types?.filter( o => o.methods?.length > 0)
+  return  valid_order_types || []
+})
+
+
+watch (get_order_types_for, (newval) => {
+
+  if (newval?.length == 1){
+    user.user.payment_method_option  = newval[0]
   }
 })
 </script>

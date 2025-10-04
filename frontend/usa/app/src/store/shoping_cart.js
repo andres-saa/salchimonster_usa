@@ -73,9 +73,47 @@ export const usecartStore = defineStore('salchi_super_cart_web443', {
       }
       return total * product.pedido_cantidad
     },
+
+    cartTotalDiscount(state) {
+    if (!Array.isArray(state.cart) || state.cart.length === 0) return 0;
+
+    return state.cart.reduce((acc, p) => {
+      const qty   = Number(p.pedido_cantidad)  || 1;
+      const disc  = Number(p.pedido_descuento) || 0;
+      return acc + (disc * qty);
+    }, 0);
+  },
+
+   cartSubtotal(state) {
+    if (!Array.isArray(state.cart) || state.cart.length === 0) return 0;
+    return state.cart.reduce((total, product) => total + this.calculateSubtotalProduct(product), 0);
+  },
   },
 
   actions: {
+
+    calculateSubtotalProduct(product) {
+    if (!product || typeof product !== "object") return 0;
+
+    const {
+      pedido_base_price = 0,
+      pedido_cantidad = 1,
+      modificadorseleccionList = [],
+    } = product;
+
+    const basePrice = Number(pedido_base_price) || 0;
+    const cantidad  = Number(pedido_cantidad)   || 1;
+
+    const adiciones = Array.isArray(modificadorseleccionList)
+      ? modificadorseleccionList.reduce(
+          (total, { pedido_precio = 0, modificadorseleccion_cantidad = 1 }) =>
+            total + (Number(pedido_precio) || 0) * (Number(modificadorseleccion_cantidad) || 1),
+          0
+        )
+      : 0;
+
+    return (basePrice + adiciones) * cantidad;
+  },
     setCurrentVideoIndex(index) {
       this.currentVideoIndex = index
     },
@@ -89,11 +127,12 @@ export const usecartStore = defineStore('salchi_super_cart_web443', {
       const {
           pedido_base_price = 0,
           pedido_cantidad = 1,
-          modificadorseleccionList = []
+          modificadorseleccionList = [],
+          pedido_descuento = product.pedido_descuento
       } = product;
 
       // Convertir a números para evitar errores con strings numéricos
-      const basePrice = Number(pedido_base_price) || 0;
+      const basePrice = Number(pedido_base_price - pedido_descuento) || 0;
       const cantidad = Number(pedido_cantidad) || 1;
 
       // Validar y calcular modificadores
@@ -120,8 +159,8 @@ export const usecartStore = defineStore('salchi_super_cart_web443', {
     getProductId(product) {
       if  (product.lista_presentacion && product.lista_presentacion.length > 0 ){
           return product.lista_presentacion[0].producto_id
-      }else if (product.productogeneral_id){
-          return product.productogeneral_id
+      }else if (product.producto_id){
+          return product.producto_id
       }
   },
 
@@ -160,6 +199,7 @@ export const usecartStore = defineStore('salchi_super_cart_web443', {
           "pedido_cantidad": quantity,
           "pedido_base_price": this.getProductPrice(product),
           "pedido_productoid": this.getProductId(product),
+          "pedido_descuento":product.discount_amount,
           "lista_productocombo": product.lista_productobase?  product.lista_productobase.map( product => {
               return {
                       "pedido_productoid": product.producto_id,

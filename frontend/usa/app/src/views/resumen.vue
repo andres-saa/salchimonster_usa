@@ -46,14 +46,28 @@
 
       <!-- Subtotales y totales -->
       <div class="grid summary-grid">
-        <div class="col-6 my-0 py-0">
-          <span><b>{{ t('subtotal') }}</b></span>
-        </div>
-        <div class="col-6 my-0 text-right py-0 text-end">
-          <span><b>{{ formatoPesosColombianos(store.cartTotal) }}</b></span>
-        </div>
 
-        <div class="col-6 my-0 py-0" >
+<div class="col-6 my-0 py-0">
+    <span><b>Subtotal</b></span>
+</div>
+
+<div class="col-6 my-0 text-right py-0 text-end">
+    <span>
+        <b>{{ formatoPesosColombianos(store.cartSubtotal) }}</b>
+    </span>
+</div>
+
+ <div class="col-6 my-0 py-0">
+    <span><b>Descuento</b></span>
+</div>
+<div class="col-6 my-0 text-right py-0 text-end">
+    <span>
+       - <b>{{ formatoPesosColombianos(store.cartTotalDiscount) }}</b>
+    </span>
+</div>
+
+
+<div class="col-6 my-0 py-0" >
           <span :style="siteStore.location.neigborhood.delivery_price == 0 ? 'text-decoration: line-through;' : ''">
             <b>{{ t('delivery') }}</b>
           </span>
@@ -67,21 +81,20 @@
             <b>{{ formatoPesosColombianos(siteStore.location.neigborhood.delivery_price) }}</b>
           </span>
         </div>
+<div class="col-6 my-0 py-0">
+    <span><b>Total</b></span>
+</div>
+<div class="col-6 my-0 text-right py-0 text-end" v-if="siteStore.location.neigborhood.delivery_price || siteStore.location.neigborhood.delivery_price === 0">
+    <!-- {{ siteStore.location }} -->
+    <span><b>{{ formatoPesosColombianos(
+        store.cartTotal +
+        siteStore.location.neigborhood.delivery_price
+            ) }}</b></span>
+</div>
 
-        <div class="col-6 my-0 py-0">
-          <span><b>{{ t('total') }}</b></span>
-        </div>
-        <div
-          class="col-6 my-0 text-right py-0 text-end"
-          v-if="siteStore.location.neigborhood.delivery_price || siteStore.location.neigborhood.delivery_price === 0"
-        >
-          <span>
-            <b>
-              {{ formatoPesosColombianos(store.cartTotal + siteStore.location.neigborhood.delivery_price) }}
-            </b>
-          </span>
-        </div>
-      </div>
+<!-- <Button @click="siteStore.visibles.currentSite = true" v-else label="Calcular mi domicilio"
+    style="min-width: max-content;"></Button> -->
+</div>
 
       <!-- Navegación -->
       <RouterLink to="/" v-if="route.path.includes('cart')">

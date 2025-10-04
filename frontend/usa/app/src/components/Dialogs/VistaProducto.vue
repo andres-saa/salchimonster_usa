@@ -31,9 +31,11 @@
           {{
             formatoPesosColombianos(
               store?.currentProduct?.productogeneral_precio ||
-              store?.currentProduct?.lista_presentacion?.[0]?.producto_precio
+              store?.currentProduct?.lista_presentacion?.[0]?.producto_precio -  store.currentProduct?.discount_amount
             )
           }}
+
+
         </h3>
       </div>
     </template>

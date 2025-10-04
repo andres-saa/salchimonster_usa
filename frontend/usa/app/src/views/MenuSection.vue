@@ -48,7 +48,7 @@ import { URI } from '@/service/conection';
 const route = useRoute()
 import { useSitesStore } from '@/store/site';
 import { useUserStore } from '@/store/user';
-import { fetchService } from '@/service/utils/fetchService';
+
 const user = useUserStore()
 const siteStore = useSitesStore()
 const store = useReportesStore()
@@ -84,31 +84,26 @@ const codigos = [
 
 // console.log(route.query)
 
+const produtct_id = route.query?.producto;
 
-const start = async() => {
-  // Si viene ?producto= en la URL, aquí puedes abrir el producto si ya está cargado en el store
-  const produtct_id = route.query?.producto
-  const categoria = route.query.categoria
-       if (produtct_id) {
-        const pe_id = siteStore.location.site?.pe_site_id
 
-        const data = await fetchService.get(`${URI}/tiendas/${pe_id || 1}/products`)
 
-        // const product = cart.menu?.data?.find(p => cart.getProductId(p) == produtct_id)
-        const categoria_candidata = data?.categorias.find(c => c.categoria_id == categoria)
-        console.log(categoria_candidata)
-        cart.currentProduct = categoria_candidata?.products.find(p => p.productogeneral_id == produtct_id)
+onMounted(() => {
+    console.log(produtct_id)
+
+    if (produtct_id) {
+        const product = cart.menu?.data?.find(p => cart.getProductId(p) == produtct_id)
+        cart.currentProduct = product
         cart.visibles.currentProduct = true
     }
 
+})
 
-}
 
 let scrollTimeout = null
 let observer = null
 
 onMounted(() => {
-  start()
   observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -137,7 +132,54 @@ onUnmounted(() => {
   if (scrollTimeout) clearTimeout(scrollTimeout)
 })
 
+const open = (product) => {
+    cart.setCurrentProduct(product);
+    cart.setVisible('currentProduct', true);
 
+
+};
+
+const smoothScrollTo = (categoryId) => {
+    // ----- SCROLL VERTICAL (al contenido) -----
+    const element = document.getElementById(categoryId);
+    if (element) {
+        const offset = 10 * 16;
+        const elementY = element.getBoundingClientRect().top + window.pageYOffset;
+        const targetPosition = elementY - offset;
+
+        window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+        });
+    }
+
+    // ----- MARCAR SECCIÓN ACTUAL -----
+    store.currentSection = categoryId;
+
+    // ----- SCROLL HORIZONTAL (a la barra de categorías) -----
+    setTimeout(() => {
+        const buttonElement = document.getElementById(`categoryButton-${categoryId}`);
+        if (buttonElement) {
+            buttonElement.scrollIntoView({
+                behavior: 'smooth',
+                inline: 'center',   // Centra horizontalmente
+                block: 'nearest'       // No desplaza verticalmente innecesariamente
+            });
+        }
+    }, 100);
+};
+
+
+onMounted(() => {
+
+  // if( !siteStore.location?.site?.pe_site_id){
+  //   siteStore.visibles.currentSite = true
+  //   console.log(siteStore.location)
+  // }
+  //   if (cart.currentSection) {
+  //       smoothScrollTo(cart.currentSection)
+  //   }
+})
 
 </script>
 
@@ -252,9 +294,15 @@ onUnmounted(() => {
    Cuando la ventana sea menor a 768px,
    queda en 1 columna (formato de “tarjeta” vertical).
 */
+
+.card-container {
+    padding: .7rem;
+    width: 100%;
+    height: 100%;
+}
 @media (max-width: 870px) {
     .section {
-        grid-template-columns: repeat(1, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         max-width: 600px;
         margin: auto;
     }
@@ -275,13 +323,14 @@ onUnmounted(() => {
         text-align: center;
 
     }
-
-}
-
-
-.card-container {
-    padding: 1rem;
+    .card-container {
+    padding: 0rem;
     width: 100%;
     height: 100%;
 }
+
+}
+
+
+
 </style>

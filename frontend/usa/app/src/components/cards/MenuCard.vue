@@ -1,39 +1,74 @@
 <template>
   <div class="container-card shadow-3 col-12 product-card" @click="open(props.product)">
-      <div class="imagen" style="grid-area: imagen;">
+      <div class="imagen">
           <!-- Imagen con lazy loading personalizado -->
-          <img  ref="productImage" class="imagen-producto lazy"
+          <img ref="productImage" class="imagen-producto lazy"
               :data-src="`${URI}/get-image?image_url=${props.product.productogeneral_urlimagen}`"
               src="https://media.tenor.com/IfbOs_yh89AAAAAM/loading-buffering.gif" alt="Descripción del producto" />
+
+
+
       </div>
 
-      <div class="texto" style="grid-area: nombre;padding-right: 1rem;">
+      <div class="texto">
           <h3 style="text-transform: uppercase;">
               <b>{{ user.lang.name == 'es'? props.product.productogeneral_descripcion : props.product.english_name }}</b>
           </h3>
 
           <!-- Contenedor interno que agrupa la descripción y el precio -->
-
-      </div>
-
-      <div class="texto-content" style="grid-area: descripcion;align-items: center;">
-
+          <div class="texto-content">
+              <!-- Fila de arriba (vacía en este ejemplo, la puedes eliminar si no la usas) -->
+              <div class="flex-row-center-space-between">
+                  <!-- Puedes agregar contenido aquí si lo deseas -->
+              </div>
 
               <!-- Descripción -->
-              <span class="max-width-100">
+              <span class="max-width-100 desc">
                   {{ truncatedDescription }}
               </span>
 
 
 
+              <div>
+
+                  <div style="display: flex;gap: .5rem;flex-wrap: wrap; justify-content: end; width: 100%;" v-if="props.product?.discount_percent && props.product?.discount_amount &&  user.lang.name == 'es' ">
+
+<Tag   style="background-color: black;color: white;" >
+{{ props.product?.discount_percent }}%
+  </Tag>
+
+
+<Tag   style="background-color: red;color: white;" >
+- {{ formatoPesosColombianos(props.product?.discount_amount)  }}
+  </Tag>
+
+
+
+
+</div>
+
+
+
+                  <div style="display: flex;gap: .5rem;flex-wrap: wrap; justify-content: end; width: 100%;" v-if="props.product?.discount_percent && props.product?.discount_amount &&  user.lang.name == 'en' ">
+
+<Tag   style="background-color: black;color: white;font-size: 1.2rem;" >
+{{ props.product?.discount_percent }}% Off
+  </Tag>
+
+
+<Tag   style="background-color: red;color: white;font-size: 1.2rem;" >
+Save {{ formatoPesosColombianos(props.product?.discount_amount)  }}
+  </Tag>
+
+
+
+
+</div>
+
+
+              </div>
               <!-- Fila de acciones (corazón y precio) -->
-
-
-
-          </div>
-
-
-          <div style="grid-area: price;" class="flex-row-center-space-between">
+              <div class="flex-row-center-space-between">
                   <!-- <Button icon="pi pi-heart text-xl p-0 m-0" text rounded class="heart-button" /> -->
 
 
@@ -41,16 +76,7 @@
 
 
                   <div class="flex-center-gap">
-                    <h2 class="text-xl p-0 m-0 precio" style="opacity: .5;font-weight: 500;text-decoration:line-through;" v-if="props.product.last_price > 0">
-                          <b>
-                              {{
-                                  formatoPesosColombianos(
-                                      props.product.last_price
-                                  )
-                              }}
-                          </b>
-                      </h2>
-                      <h2 class="text-xl p-0 m-0 precio-original" style="font-size: 1.7rem;">
+                    <h2 class="text-xl p-0 m-0 precio" style="opacity: .5;font-weight: 500;text-decoration:line-through;" v-if="product.discount_amount > 0">
                           <b>
                               {{
                                   formatoPesosColombianos(
@@ -60,55 +86,35 @@
                               }}
                           </b>
                       </h2>
+                      <h2 class="text-xl p-0 m-0 precio-original" style="font-size: 1.7rem;">
+                          <b v-if="(props.product.productogeneral_precio - props.product.discount_amount ||
+                                      props.product.lista_presentacion[0].producto_precio - props.product.discount_amount) > 0">
+                              {{
+                                  formatoPesosColombianos(
+                                      props.product.productogeneral_precio - props.product.discount_amount ||
+                                      props.product.lista_presentacion[0].producto_precio - props.product.discount_amount
+                                  )
+                              }}
+                          </b>
+
+                          <b v-else> ...</b>
+                      </h2>
                   </div>
 
 
               </div>
 
 
+          </div>
+      </div>
 
 
-              <div style="grid-area: tags;">
-
-<div style="display: flex;gap: .5rem;flex-wrap: wrap; justify-content: end; width: 100%;" v-if="porcentajeDescuento && valorAhorrado &&  user.lang.name == 'es' ">
-
-<Tag   style="background-color: black;color: white;font-size: 1.2rem;" >
-{{ porcentajeDescuento }}
-</Tag>
+      <!-- {{props.product}} -->
 
 
-<Tag   style="background-color: red;color: white;font-size: 1.2rem;" >
-Ahorras {{ valorAhorrado }}
-</Tag>
-
-
-
-
-</div>
-
-
-<div  style="display: flex;gap: .5rem; flex-wrap: wrap; justify-content: end; width: 100%;">
-
-<Tag v-if="porcentajeDescuento && valorAhorrado &&   user.lang.name != 'es'" style="background-color: black;color: white;font-size: 1.2rem;" >
-{{ porcentajeDescuento }} Off
-</Tag>
-
-
-<Tag v-if="porcentajeDescuento && valorAhorrado &&   user.lang.name != 'es'" style="background-color: red;color: white;font-size: 1.2rem;" >
-Save {{ valorAhorrado }}
-</Tag>
-
-
-
-
-</div>
-
-
-
-</div>
 
       <!-- Botón flotante para añadir al carrito -->
-      <Button  class="add-to-cart-button" @click.stop="addToCart(props.product)" severity="danger" rounded> <i
+      <Button class="add-to-cart-button" @click.stop="addToCart(props.product)" severity="danger" rounded> <i
               class="pi pi-plus text-xl fw-100" style="font-weight: bold;"></i> </Button>
   </div>
 </template>
@@ -124,9 +130,6 @@ import router from '@/router';
 import { URI } from '@/service/conection';
 const route = useRoute()
 import { useUserStore } from '@/store/user';
-import { useSitesStore } from '@/store/site';
-
-const sitestore = useSitesStore()
 const user = useUserStore();
 // Acceso al store del carrito
 const store = usecartStore();
@@ -291,9 +294,8 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 1rem;
   height: 100%;
-  /* flex-direction: column; */
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
 }
 
 /* Fila con “display: flex; justify-content: space-between; align-items: center;” */
@@ -332,26 +334,20 @@ onBeforeUnmount(() => {
 
 .container-card {
   display: grid;
-  gap: 0rem 1rem;
-  align-items: center;
-  justify-content: end;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-areas:
-    "nombre nombre nombre"
-    "imagen descripcion descripcion"
-    "tags tags  tags"
-    "price price  price";
+  gap: 1rem;
+  /* Spacing between grid items */
+  grid-template-columns: 1fr;
+  height: 100%;
   width: 100%;
-  max-width: 900px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: .5rem;
   box-shadow: 0 1rem 1rem rgba(160, 160, 160, 0.3);
   border-radius: 0.5rem;
+  /* Curvatura específica */
   background-color: #fff;
   transition: all ease 0.3s;
   cursor: pointer;
-  position: relative;
-  height: 100%;
 }
 
 .character {
@@ -364,18 +360,23 @@ onBeforeUnmount(() => {
 }
 
 /* Ajustes responsivos */
-@media (max-width: 900px) {
 
-  span,
-  h3 {
-      font-size: 12.5px;
+
+@media (max-width: 20000px) {
+  .container-card {
+      grid-template-columns: 1fr 2fr;
+      width: 100%;
   }
 
-  h2 {
-      font-size: 20px;
+  .imagen,
+  .texto {
+      width: 100%;
+  }
+
+  .character {
+      display: inline;
   }
 }
-
 
 /* Animación e imágenes */
 .rating {
@@ -412,5 +413,44 @@ onBeforeUnmount(() => {
 .cargado {
   opacity: 1;
   animation: fadeIn 0.1s ease-out forwards;
+}
+
+@media (max-width: 900px) {
+
+
+*{
+  font-size: .8rem !important;
+}
+span,
+h3 {
+  font-size: 12.5px;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+.desc{
+display: none;
+}
+
+.texto-content{
+gap: 0;
+}
+
+.container-card {
+  grid-template-columns: 1fr;
+  width: 100%;
+
+}
+
+*{
+font-weight: 500 !important;
+text-transform: lowercase;
+}
+
+.add-to-cart-button{
+display: none;
+}
 }
 </style>
