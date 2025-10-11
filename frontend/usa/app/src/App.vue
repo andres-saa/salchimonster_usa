@@ -44,7 +44,7 @@ async function loadInitialData () {
     // Evita llamadas si no hay site_id aún
     const [status, data] = await Promise.all([
       site_id ? fetchService.get(`${URI}/site/${site_id}/status`) : Promise.resolve(null),
-      fetchService.get(`${URI}/tiendas/${pe_id}/products`)
+      fetchService.get(`${URI}/tiendas/${site_id}/products`)
     ])
 
     if (status) siteStore.status = status
