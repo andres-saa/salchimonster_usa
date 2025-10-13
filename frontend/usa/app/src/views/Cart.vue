@@ -19,7 +19,7 @@
                                 </div>
 
                             <img class="cart-product-img p-1"
-                            :src="`${URI}/get-image?image_url=${product.productogeneral_urlimagen}`" alt="" />
+                            :src="`https://img.restpe.com/${product.productogeneral_urlimagen}`" alt="" />
 
 
 

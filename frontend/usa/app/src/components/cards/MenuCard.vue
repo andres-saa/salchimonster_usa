@@ -2,9 +2,9 @@
   <div class="container-card shadow-3 col-12 product-card" @click="open(props.product)">
       <div class="imagen">
           <!-- Imagen con lazy loading personalizado -->
-          <img ref="productImage" class="imagen-producto lazy"
-              :data-src="`${URI}/get-image?image_url=${props.product.productogeneral_urlimagen}`"
-              src="https://media.tenor.com/IfbOs_yh89AAAAAM/loading-buffering.gif" alt="Descripción del producto" />
+          <img  class="imagen-producto "
+             
+              :src="`https://img.restpe.com/${props.product.productogeneral_urlimagen}`" alt="Descripción del producto" />
 
 
 
