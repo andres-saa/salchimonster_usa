@@ -273,7 +273,7 @@ onBeforeUnmount(() => {
   /* o 'contain' según tu preferencia */
   border-radius: 0.5rem;
   transition: opacity 0.5s ease-in-out, filter 0.3s ease-out;
-  opacity: 0;
+
   filter: blur(10px);
 }
 

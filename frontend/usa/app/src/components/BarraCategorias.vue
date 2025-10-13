@@ -28,7 +28,7 @@
             :label="section.categoria_descripcion"
           >
             <img
-              :src="`${URI}/get-image?image_url=${section.products?.[0]?.productogeneral_urlimagen}`"
+              :src="`https://img.restpe.com/${section.products?.[0]?.productogeneral_urlimagen}`"
               alt=""
             />
             <span style="text-transform: capitalize;"
