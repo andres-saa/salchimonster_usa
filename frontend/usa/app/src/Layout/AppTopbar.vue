@@ -234,7 +234,7 @@ const socialLinks = [
   },
   {
     icon: 'pi pi-whatsapp',
-    href: 'https://api.whatsapp.com/send?phone=13477929350'
+    href: 'https://api.whatsapp.com/send?phone=573102142549'
   },
   {
     icon: 'pi pi-youtube',
