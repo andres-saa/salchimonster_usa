@@ -249,7 +249,7 @@ const buttons = computed(() => {
   return [
     { name: t.menus.domicilios, to: '/', icon: 'fa-solid fa-bars' },
     { name: t.menus.sedes, to: '/sedes', icon: 'fa-solid fa-building' },
-    // { name: t.menus.carta, to: '/menu', icon: 'fa-solid fa-list' },
+    { name: t.menus.carta, to: '/menu', icon: 'fa-solid fa-list' },
     { name: t.menus.rastrear, to: '/rastrear-pedido', icon: 'fa-solid fa-truck' },
     { name: t.menus.ayuda, to: '/pqrs-user', icon: 'fa-solid fa-question-circle' },
   ];
